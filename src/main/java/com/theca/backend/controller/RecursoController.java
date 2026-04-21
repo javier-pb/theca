@@ -31,10 +31,10 @@ import com.theca.backend.entity.Tipo;
 import com.theca.backend.entity.Etiqueta;
 import com.theca.backend.entity.Categoria;
 import com.theca.backend.entity.Autor;
-import com.theca.backend.dto.CreateRecursoDTO;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.RecursoRepository;
-import com.theca.backend.dto.UpdateRecursoDTO;
+import com.theca.backend.dto.recurso.CreateRecursoDTO;
+import com.theca.backend.dto.recurso.UpdateRecursoDTO;
 
 @RestController
 @RequestMapping("/api/recursos")

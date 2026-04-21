@@ -1,22 +1,21 @@
 /**
- * Descripción: DTO para actualizar una Categoría.
+ * Descripción: DTO para actualizar una Etiqueta.
  * 
  * @author Javier Pérez Báez
  * @version 1.0
  * @date 19 abr 2026
  */
 
-package com.theca.backend.dto;
+package com.theca.backend.dto.etiqueta;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 
-public class UpdateCategoriaDTO {
+public class UpdateEtiquetaDTO {
 
     private String nombre;
-    private String categoriaPadreId;
     private EstadoSincronizacion estadoSincronizacion;
 
-    public UpdateCategoriaDTO() {}
+    public UpdateEtiquetaDTO() {}
 
     public String getNombre() {
     	return nombre;
@@ -24,14 +23,6 @@ public class UpdateCategoriaDTO {
     
     public void setNombre(String nombre) {
     	this.nombre = nombre;
-    }
-
-    public String getCategoriaPadreId() {
-    	return categoriaPadreId;
-    }
-    
-    public void setCategoriaPadreId(String categoriaPadreId) {
-    	this.categoriaPadreId = categoriaPadreId;
     }
 
     public EstadoSincronizacion getEstadoSincronizacion() {

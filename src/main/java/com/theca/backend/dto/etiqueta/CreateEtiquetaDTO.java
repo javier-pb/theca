@@ -1,18 +1,17 @@
 /**
- * Descripción: DTO para crear un nuevo Autor.
- * 
+ * Descripción: DTO para crear una nueva Etiqueta.
  * @author Javier Pérez Báez
  * @version 1.0
  * @date 19 abr 2026
  * 
  */
-package com.theca.backend.dto;
+package com.theca.backend.dto.etiqueta;
 
-public class CreateAutorDTO {
+public class CreateEtiquetaDTO {
 
     private String nombre;
 
-    public CreateAutorDTO() {}
+    public CreateEtiquetaDTO() {}
 
     public String getNombre() {
         return nombre;

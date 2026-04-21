@@ -36,8 +36,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.theca.backend.entity.Usuario;
-import com.theca.backend.dto.CreateUsuarioDTO;
-import com.theca.backend.dto.UpdateUsuarioDTO;
+import com.theca.backend.dto.usuario.CreateUsuarioDTO;
+import com.theca.backend.dto.usuario.UpdateUsuarioDTO;
 import com.theca.backend.repository.UsuarioRepository;
 
 @ExtendWith(MockitoExtension.class)

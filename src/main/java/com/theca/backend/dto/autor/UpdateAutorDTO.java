@@ -6,7 +6,7 @@
  * @date 19 abr 2026
  */
 
-package com.theca.backend.dto;
+package com.theca.backend.dto.autor;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 

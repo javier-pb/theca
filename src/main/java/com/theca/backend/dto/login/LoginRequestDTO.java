@@ -7,7 +7,7 @@
  * 
  */
 
-package com.theca.backend.dto;
+package com.theca.backend.dto.login;
 
 // DTO para la petición de login:
 public class LoginRequestDTO {

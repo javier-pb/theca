@@ -38,8 +38,8 @@ import org.springframework.http.ResponseEntity;
 import com.theca.backend.entity.Recurso;
 import com.theca.backend.entity.Usuario;
 import com.theca.backend.repository.RecursoRepository;
-import com.theca.backend.dto.CreateRecursoDTO;
-import com.theca.backend.dto.UpdateRecursoDTO;
+import com.theca.backend.dto.recurso.CreateRecursoDTO;
+import com.theca.backend.dto.recurso.UpdateRecursoDTO;
 import com.theca.backend.enums.EstadoSincronizacion;
 
 @ExtendWith(MockitoExtension.class)

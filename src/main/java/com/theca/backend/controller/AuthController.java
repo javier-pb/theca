@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.theca.backend.dto.LoginRequestDTO;
-import com.theca.backend.dto.LoginResponseDTO;
+import com.theca.backend.dto.login.LoginRequestDTO;
+import com.theca.backend.dto.login.LoginResponseDTO;
 import com.theca.backend.entity.Usuario;
 import com.theca.backend.repository.UsuarioRepository;
 import com.theca.backend.security.jwt.JwtUtils;
