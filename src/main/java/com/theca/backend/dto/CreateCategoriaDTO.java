@@ -8,8 +8,11 @@
  */
 package com.theca.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class CreateCategoriaDTO {
 
+	@NotBlank(message = "El nombre de la categoría es obligatorio")
     private String nombre;
     private String categoriaPadreId;
 

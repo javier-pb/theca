@@ -16,11 +16,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 
+import jakarta.validation.constraints.NotBlank;
+
 @Document(collection = "categorias")
 public class Categoria {
     
     @Id
     private String id;
+    @NotBlank(message = "El nombre de la categoría es obligatorio")
     private String nombre;
     private LocalDateTime fechaModificacion;
     private EstadoSincronizacion estadoSincronizacion;

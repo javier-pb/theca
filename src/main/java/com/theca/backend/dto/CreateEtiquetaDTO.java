@@ -7,8 +7,11 @@
  */
 package com.theca.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class CreateEtiquetaDTO {
 
+	@NotBlank(message = "El nombre de la etiqueta es obligatorio")
     private String nombre;
 
     public CreateEtiquetaDTO() {}
