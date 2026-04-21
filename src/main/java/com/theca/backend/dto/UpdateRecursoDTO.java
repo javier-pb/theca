@@ -12,9 +12,12 @@ import java.util.List;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class UpdateRecursoDTO {
 
     // Campos que el usuario puede enviar al actualizar:
+	@NotBlank(message = "El título del recurso es obligatorio")
     private String titulo;
     private String descripcion;
     private String enlace;

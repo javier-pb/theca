@@ -8,8 +8,11 @@
  */
 package com.theca.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class CreateTipoDTO {
 
+	@NotBlank(message = "El nombre del tipo de recurso es obligatorio")
     private String nombre;
 
     public CreateTipoDTO() {}

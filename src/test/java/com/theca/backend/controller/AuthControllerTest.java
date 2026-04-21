@@ -28,6 +28,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.theca.backend.dto.CreateUsuarioDTO;
 import com.theca.backend.dto.LoginRequestDTO;
 import com.theca.backend.dto.LoginResponseDTO;
 import com.theca.backend.entity.Usuario;
@@ -81,17 +82,17 @@ class AuthControllerTest {
     // Test para verificar que se devuelve un 200 OK cuando se registra un nuevo usuario:
     @Test
     void registerUser_ShouldReturnOk_WhenUserIsNew() {
-        Usuario newUser = new Usuario();
-        newUser.setNombre("Nuevo");
-        newUser.setCorreo("nuevo@email.com");
-        newUser.setContrasena("password");
+    	CreateUsuarioDTO createDTO = new CreateUsuarioDTO();
+    	createDTO.setNombre("Nuevo");
+    	createDTO.setCorreo("nuevo@email.com");
+    	createDTO.setContrasena("password");
 
         when(usuarioRepository.existsByNombre("Nuevo")).thenReturn(false);
         when(usuarioRepository.existsByCorreo("nuevo@email.com")).thenReturn(false);
         when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-        when(usuarioRepository.save(any(Usuario.class))).thenReturn(newUser);
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(new Usuario());
 
-        ResponseEntity<?> response = authController.registerUser(newUser);
+        ResponseEntity<?> response = authController.registerUser(createDTO);
 
         assertEquals(201, response.getStatusCode().value());
         verify(usuarioRepository, times(1)).save(any(Usuario.class));
@@ -100,13 +101,13 @@ class AuthControllerTest {
     // Test para verificar que se devuelve un error 400 cuando el nombre de usuario ya existe al registrarlo:
     @Test
     void registerUser_ShouldReturnBadRequest_WhenUsernameExists() {
-        Usuario newUser = new Usuario();
-        newUser.setNombre("Existente");
-        newUser.setCorreo("nuevo@email.com");
+    	CreateUsuarioDTO createDTO = new CreateUsuarioDTO();
+    	createDTO.setNombre("Existente");
+    	createDTO.setCorreo("nuevo@email.com");
 
         when(usuarioRepository.existsByNombre("Existente")).thenReturn(true);
 
-        ResponseEntity<?> response = authController.registerUser(newUser);
+        ResponseEntity<?> response = authController.registerUser(createDTO);
 
         assertEquals(400, response.getStatusCode().value());
         verify(usuarioRepository, never()).save(any(Usuario.class));

@@ -10,8 +10,11 @@ package com.theca.backend.dto;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class UpdateTipoDTO {
 
+	@NotBlank(message = "El nombre del tipo de recurso es obligatorio")
     private String nombre;
     private EstadoSincronizacion estadoSincronizacion;
 

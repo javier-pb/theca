@@ -10,8 +10,11 @@ package com.theca.backend.dto;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class UpdateAutorDTO {
 
+	@NotBlank(message = "El nombre del autor es obligatorio")
     private String nombre;
     private EstadoSincronizacion estadoSincronizacion;
 

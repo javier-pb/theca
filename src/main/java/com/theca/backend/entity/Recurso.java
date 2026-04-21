@@ -17,12 +17,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 
+import jakarta.validation.constraints.NotBlank;
+
 @Document(collection = "recursos")
 public class Recurso {
 
 	// Propiedades de la entidad:
 	@Id
 	private String id;
+	@NotBlank(message = "El titulo del recurso es obligatorio")
 	private String titulo;
 	private String descripcion;
 	private String enlace;

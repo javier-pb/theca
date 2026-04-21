@@ -24,12 +24,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.theca.backend.entity.Categoria;
 import com.theca.backend.dto.UpdateCategoriaDTO;
+import com.theca.backend.entity.Categoria;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.CategoriaRepository;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 @RestController
+@Tag(name = "Categorías", description = "Endpoints para gestionar categorías")
 @RequestMapping("/api/categorias")
 public class CategoriaController {
 
@@ -40,17 +47,34 @@ public class CategoriaController {
     }
 
     @GetMapping
+    @Operation(summary = "Obtener todas las categorías", description = "Devuelve una lista de todas las categorías")
+    @ApiResponses({
+    	@ApiResponse(responseCode = "200", description = "Lista de categorías obtenida exitosamente"),
+    	@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public List<Categoria> getAll() {
         return categoriaRepository.findAll();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener categoría por ID", description = "Devuelve una categoría específica según su ID")
+    @ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Categoría obtenida exitosamente"),
+		@ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
+		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+	})
     public ResponseEntity<Categoria> getById(@PathVariable String id) {
         return categoriaRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Crear nueva categoría", description = "Crea una nueva categoría con los datos proporcionados")
+    @ApiResponses({
+		@ApiResponse(responseCode = "201", description = "Categoría creada exitosamente"),
+		@ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+	})
     public Categoria create(@RequestBody Categoria categoria) {
         categoria.setFechaModificacion(LocalDateTime.now());
         categoria.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
@@ -58,7 +82,14 @@ public class CategoriaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Categoria> update(@PathVariable String id, @RequestBody UpdateCategoriaDTO categoriaActualizada) {
+    @Operation(summary = "Actualizar categoría existente", description = "Actualiza una categoría existente con los datos proporcionados")
+    @ApiResponses({
+    	@ApiResponse(responseCode = "200", description = "Categoría actualizada exitosamente"),
+    	@ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+    	@ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
+    })
+    public ResponseEntity<Categoria> update(@PathVariable String id,
+    										@Valid @RequestBody UpdateCategoriaDTO categoriaActualizada) {
         return categoriaRepository.findById(id).map(categoriaExistente -> {
             if (categoriaActualizada.getNombre() != null) {
                 categoriaExistente.setNombre(categoriaActualizada.getNombre());
@@ -75,6 +106,12 @@ public class CategoriaController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar categoría", description = "Elimina una categoría específica según su ID")
+    @ApiResponses({
+		@ApiResponse(responseCode = "204", description = "Categoría eliminada exitosamente"),
+		@ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
+		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+	})
     public ResponseEntity<Void> delete(@PathVariable String id) {
         if (categoriaRepository.existsById(id)) {
             categoriaRepository.deleteById(id);

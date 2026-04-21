@@ -10,9 +10,12 @@ package com.theca.backend.dto;
 
 import java.util.List;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class CreateRecursoDTO {
     
     // Campos que el usuario puede enviar al crear:
+	@NotBlank(message = "El titulo del recurso es obligatorio")
     private String titulo;
     private String descripcion;
     private String enlace;

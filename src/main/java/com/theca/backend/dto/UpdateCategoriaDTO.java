@@ -10,8 +10,11 @@ package com.theca.backend.dto;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class UpdateCategoriaDTO {
 
+	@NotBlank(message = "El nombre de la categoría es obligatorio")
     private String nombre;
     private String categoriaPadreId;
     private EstadoSincronizacion estadoSincronizacion;

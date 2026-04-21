@@ -24,12 +24,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.theca.backend.entity.Usuario;
 import com.theca.backend.dto.CreateUsuarioDTO;
 import com.theca.backend.dto.UpdateUsuarioDTO;
+import com.theca.backend.entity.Usuario;
 import com.theca.backend.repository.UsuarioRepository;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 @RestController
+@Tag(name = "Usuarios", description = "Endpoints para gestionar usuarios")
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
@@ -40,11 +47,22 @@ public class UsuarioController {
     }
     
     @GetMapping
+    @Operation(summary = "Obtener todos los usuarios", description = "Devuelve una lista de todos los usuarios")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente"),
+		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+	})
     public List<Usuario> getAll() {
         return usuarioRepository.findAll();
     }
     
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener usuario por ID", description = "Devuelve un usuario específico según su ID")
+    @ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Usuario obtenido exitosamente"),
+		@ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+	})
     public ResponseEntity<Usuario> getById(@PathVariable String id) {
         return usuarioRepository.findById(id)
                 .map(ResponseEntity::ok)
@@ -53,7 +71,13 @@ public class UsuarioController {
     
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Usuario create(@RequestBody CreateUsuarioDTO dto) {
+    @Operation(summary = "Crear un nuevo usuario", description = "Crea un nuevo usuario")
+    @ApiResponses({
+    	@ApiResponse(responseCode = "201", description = "Usuario creado exitosamente"),
+    	@ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+    	@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public Usuario create(@Valid @RequestBody CreateUsuarioDTO dto) {
         Usuario usuario = new Usuario();
         usuario.setNombre(dto.getNombre());
         usuario.setCorreo(dto.getCorreo());
@@ -63,7 +87,15 @@ public class UsuarioController {
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> update(@PathVariable String id, @RequestBody UpdateUsuarioDTO usuarioActualizado) {
+    @Operation(summary = "Actualizar un usuario existente", description = "Actualiza un usuario existente con los datos proporcionados")
+    @ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Usuario actualizado exitosamente"),
+		@ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+		@ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+	})
+    public ResponseEntity<Usuario> update(@PathVariable String id,
+    									  @Valid @RequestBody UpdateUsuarioDTO usuarioActualizado) {
         return usuarioRepository.findById(id)
                 .map(usuarioExistente -> {
                     if (usuarioActualizado.getNombre() != null) {
@@ -81,6 +113,12 @@ public class UsuarioController {
     }
     
     @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar un usuario", description = "Elimina un usuario específico según su ID")
+    @ApiResponses({
+    	@ApiResponse(responseCode = "204", description = "Usuario eliminado exitosamente"),
+    	@ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+    	@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public ResponseEntity<Void> delete(@PathVariable String id) {
         if (usuarioRepository.existsById(id)) {
             usuarioRepository.deleteById(id);

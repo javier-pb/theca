@@ -14,13 +14,18 @@ import java.time.LocalDateTime;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import jakarta.validation.constraints.NotBlank;
+
 @Document(collection = "usuarios")
 public class Usuario {
     
     @Id
     private String id;
+    @NotBlank(message = "El nombre de usuario es obligatorio")
     private String nombre;
+    @NotBlank(message = "El correo es obligatorio")
     private String correo;
+    @NotBlank(message = "La contraseña es obligatoria")
     private String contrasena;
     private LocalDateTime fechaCreacion;
     
