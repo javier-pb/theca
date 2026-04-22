@@ -12,6 +12,7 @@ package com.theca.backend.controller;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,8 +26,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.theca.backend.dto.CreateRecursoDTO;
-import com.theca.backend.dto.UpdateRecursoDTO;
+import com.theca.backend.dto.recurso.CreateRecursoDTO;
+import com.theca.backend.dto.recurso.RecursoSearchDTO;
+import com.theca.backend.dto.recurso.UpdateRecursoDTO;
 import com.theca.backend.entity.Autor;
 import com.theca.backend.entity.Categoria;
 import com.theca.backend.entity.Etiqueta;
@@ -35,6 +37,7 @@ import com.theca.backend.entity.Tipo;
 import com.theca.backend.entity.Usuario;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.RecursoRepository;
+import com.theca.backend.service.RecursoSearchService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -48,6 +51,9 @@ import jakarta.validation.Valid;
 public class RecursoController {
 
 	private final RecursoRepository recursoRepository;
+	
+	@Autowired
+	private RecursoSearchService recursoSearchService;
 	    
 	// Constructor (inyección de dependencias):
 	public RecursoController(RecursoRepository recursoRepository) {
@@ -213,6 +219,12 @@ public class RecursoController {
 			return ResponseEntity.noContent().build();
 		}
 		return ResponseEntity.notFound().build();
+	}
+	
+	// Endpoint POST /buscar (búsqueda avanzada de recursos):
+	@PostMapping("/buscar")
+	public List<Recurso> search(@RequestBody RecursoSearchDTO searchDTO) {
+	    return recursoSearchService.search(searchDTO);
 	}
 	
 }

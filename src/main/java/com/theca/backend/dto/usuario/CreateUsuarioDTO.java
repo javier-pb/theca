@@ -6,7 +6,7 @@
  * @date 19 abr 2026
  * 
  */
-package com.theca.backend.dto;
+package com.theca.backend.dto.usuario;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

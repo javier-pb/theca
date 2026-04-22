@@ -7,7 +7,7 @@
  * 
  */
 
-package com.theca.backend.dto;
+package com.theca.backend.dto.login;
 
 import jakarta.validation.constraints.NotBlank;
 

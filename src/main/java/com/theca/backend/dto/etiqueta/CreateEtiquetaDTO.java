@@ -5,7 +5,7 @@
  * @date 19 abr 2026
  * 
  */
-package com.theca.backend.dto;
+package com.theca.backend.dto.etiqueta;
 
 import jakarta.validation.constraints.NotBlank;
 

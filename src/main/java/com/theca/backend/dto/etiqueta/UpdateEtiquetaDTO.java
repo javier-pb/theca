@@ -1,24 +1,24 @@
 /**
- * Descripción: DTO para actualizar un Tipo.
+ * Descripción: DTO para actualizar una Etiqueta.
  * 
  * @author Javier Pérez Báez
  * @version 1.0
  * @date 19 abr 2026
  */
 
-package com.theca.backend.dto;
+package com.theca.backend.dto.etiqueta;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class UpdateTipoDTO {
+public class UpdateEtiquetaDTO {
 
-	@NotBlank(message = "El nombre del tipo de recurso es obligatorio")
+	@NotBlank(message = "El nombre de la etiqueta es obligatorio")
     private String nombre;
     private EstadoSincronizacion estadoSincronizacion;
 
-    public UpdateTipoDTO() {}
+    public UpdateEtiquetaDTO() {}
 
     public String getNombre() {
     	return nombre;

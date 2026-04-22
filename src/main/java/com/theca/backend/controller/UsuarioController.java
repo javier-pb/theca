@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.theca.backend.dto.CreateUsuarioDTO;
-import com.theca.backend.dto.UpdateUsuarioDTO;
+import com.theca.backend.dto.usuario.CreateUsuarioDTO;
+import com.theca.backend.dto.usuario.UpdateUsuarioDTO;
 import com.theca.backend.entity.Usuario;
 import com.theca.backend.repository.UsuarioRepository;
 

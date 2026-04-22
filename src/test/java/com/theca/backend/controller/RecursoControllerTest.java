@@ -28,31 +28,36 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import com.theca.backend.dto.recurso.CreateRecursoDTO;
+import com.theca.backend.dto.recurso.RecursoSearchDTO;
+import com.theca.backend.dto.recurso.UpdateRecursoDTO;
 import com.theca.backend.entity.Recurso;
 import com.theca.backend.entity.Usuario;
-import com.theca.backend.repository.RecursoRepository;
-import com.theca.backend.dto.CreateRecursoDTO;
-import com.theca.backend.dto.UpdateRecursoDTO;
 import com.theca.backend.enums.EstadoSincronizacion;
+import com.theca.backend.repository.RecursoRepository;
+import com.theca.backend.service.RecursoSearchService;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 public class RecursoControllerTest {
-	
-	// Antes de nada, se mockea el repositorio:
-	@Mock
-    private RecursoRepository recursoRepository;
 
-	// También se inyectan, moackeados, el controlador y dos recursos:
-    @InjectMocks
+	// Se inyectan el controlador, el repositorio, el servicio y dos recursos:
+    @Autowired
     private RecursoController recursoController;
 
+    @SuppressWarnings("removal")
+	@MockBean
+    private RecursoRepository recursoRepository;
+    
+    @SuppressWarnings("removal")
+	@MockBean
+    private RecursoSearchService recursoSearchService;
+    
     private Recurso recurso1;
     private Recurso recurso2;
     
@@ -244,4 +249,22 @@ public class RecursoControllerTest {
         verify(recursoRepository, never()).deleteById(anyString());
     }
 	
+	// Test del endpoint POST /buscar (búsqueda avanzada de recursos):
+    @Test
+    void search_ShouldReturnFilteredRecursos() {
+        RecursoSearchDTO searchDTO = new RecursoSearchDTO();
+        searchDTO.setTitulo("Título 1");
+        
+        List<Recurso> expectedRecursos = Arrays.asList(recurso1);
+        
+        when(recursoSearchService.search(any(RecursoSearchDTO.class))).thenReturn(expectedRecursos);
+        
+        List<Recurso> actualRecursos = recursoController.search(searchDTO);
+        
+        assertNotNull(actualRecursos);
+        assertEquals(1, actualRecursos.size());
+        assertEquals("Título 1", actualRecursos.get(0).getTitulo());
+        verify(recursoSearchService, times(1)).search(any(RecursoSearchDTO.class));
+    }
+    
 }

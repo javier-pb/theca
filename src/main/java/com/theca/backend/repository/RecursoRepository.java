@@ -25,4 +25,5 @@ public interface RecursoRepository extends MongoRepository<Recurso, String> {
     
     // Buscar recursos de un usuario por su ID:
     List<Recurso> findByUsuarioId(String usuarioId);
+    
 }

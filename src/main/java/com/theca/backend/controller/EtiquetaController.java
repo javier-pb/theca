@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.theca.backend.dto.UpdateEtiquetaDTO;
+import com.theca.backend.dto.etiqueta.UpdateEtiquetaDTO;
 import com.theca.backend.entity.Etiqueta;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.EtiquetaRepository;
