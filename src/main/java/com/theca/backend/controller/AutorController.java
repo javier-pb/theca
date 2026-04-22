@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.theca.backend.dto.UpdateAutorDTO;
+import com.theca.backend.dto.autor.UpdateAutorDTO;
 import com.theca.backend.entity.Autor;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.AutorRepository;

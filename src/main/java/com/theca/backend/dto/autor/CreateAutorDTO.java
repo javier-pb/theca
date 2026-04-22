@@ -1,21 +1,18 @@
 /**
- * Descripción: DTO para crear un nuevo Tipo.
+ * Descripción: DTO para crear un nuevo Autor.
  * 
  * @author Javier Pérez Báez
  * @version 1.0
  * @date 19 abr 2026
  * 
  */
-package com.theca.backend.dto;
+package com.theca.backend.dto.autor;
 
-import jakarta.validation.constraints.NotBlank;
+public class CreateAutorDTO {
 
-public class CreateTipoDTO {
-
-	@NotBlank(message = "El nombre del tipo de recurso es obligatorio")
     private String nombre;
 
-    public CreateTipoDTO() {}
+    public CreateAutorDTO() {}
 
     public String getNombre() {
         return nombre;

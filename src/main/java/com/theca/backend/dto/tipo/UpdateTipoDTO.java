@@ -1,25 +1,24 @@
 /**
- * Descripción: DTO para actualizar una Categoría.
+ * Descripción: DTO para actualizar un Tipo.
  * 
  * @author Javier Pérez Báez
  * @version 1.0
  * @date 19 abr 2026
  */
 
-package com.theca.backend.dto;
+package com.theca.backend.dto.tipo;
 
 import com.theca.backend.enums.EstadoSincronizacion;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class UpdateCategoriaDTO {
+public class UpdateTipoDTO {
 
-	@NotBlank(message = "El nombre de la categoría es obligatorio")
+	@NotBlank(message = "El nombre del tipo de recurso es obligatorio")
     private String nombre;
-    private String categoriaPadreId;
     private EstadoSincronizacion estadoSincronizacion;
 
-    public UpdateCategoriaDTO() {}
+    public UpdateTipoDTO() {}
 
     public String getNombre() {
     	return nombre;
@@ -27,14 +26,6 @@ public class UpdateCategoriaDTO {
     
     public void setNombre(String nombre) {
     	this.nombre = nombre;
-    }
-
-    public String getCategoriaPadreId() {
-    	return categoriaPadreId;
-    }
-    
-    public void setCategoriaPadreId(String categoriaPadreId) {
-    	this.categoriaPadreId = categoriaPadreId;
     }
 
     public EstadoSincronizacion getEstadoSincronizacion() {
