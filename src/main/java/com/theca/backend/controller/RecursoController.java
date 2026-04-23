@@ -223,6 +223,12 @@ public class RecursoController {
 	
 	// Endpoint POST /buscar (búsqueda avanzada de recursos):
 	@PostMapping("/buscar")
+	@Operation(summary = "Búsqueda avanzada de recursos", description = "Realiza una búsqueda avanzada de recursos según los criterios proporcionados")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Búsqueda realizada exitosamente"),
+		@ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+	})
 	public List<Recurso> search(@RequestBody RecursoSearchDTO searchDTO) {
 	    return recursoSearchService.search(searchDTO);
 	}
