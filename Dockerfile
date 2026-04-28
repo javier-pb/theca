@@ -1,6 +1,6 @@
 # Dockerfile para Theca Backend
 # Usa una imagen base de Eclipse Temurin con Java 21:
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM  maven:3.9.8-eclipse-temurin-17-alpine AS build
 
 # Establece el directorio de trabajo:
 WORKDIR /app
@@ -14,7 +14,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Imagen final para ejecutar la aplicación:
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:17-jre-alpine
 
 # Copia el JAR generado desde la fase de build:
 COPY --from=build /app/target/*.jar app.jar
