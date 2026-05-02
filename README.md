@@ -59,3 +59,45 @@ cd theca-backend
 mvn clean package
 java -jar target/theca-backend-0.0.1-SNAPSHOT.jar
 ```
+La API estará disponible en http://localhost:8080
+
+### Frontend (Angular)
+```bash
+cd theca-frontend
+npm install
+ng serve
+```
+La aplicación estará disponible en http://localhost:4200
+
+Con Docker
+```bash
+docker build -t theca-backend .
+docker run -p 8080:8080 theca-backend
+```
+
+## 📚 Documentación de la API
+Una vez ejecutado el backend, la documentación Swagger está disponible en http://localhost:8080/swagger-ui/index.html
+
+## 📁 Estructura del proyecto
+theca/
+├── theca-backend/               # Backend Spring Boot
+│   ├── src/main/java/           # Código fuente
+│   ├── src/main/resources/      # Configuración
+│   └── pom.xml
+├── theca-frontend/              # Frontend Angular (en desarrollo)
+├── Dockerfile
+├── .github/workflows/ci-cd.yml  # Pipeline CI/CD
+└── README.md
+
+## 🧪 Pruebas
+```bash
+cd theca-backend
+mvn test
+```
+
+## 👤 Autor
+Javier Pérez Báez - Estudiante de 2º curso del Grado Superior en Desarrollo de Aplicaciones Multiplataforma - IES Virgen de la Paloma
+Tutor: Isidoro Nevares Martín
+
+## 📄 Licencia
+Proyecto académico sin fines comerciales.
