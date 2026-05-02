@@ -79,6 +79,7 @@ docker run -p 8080:8080 theca-backend
 Una vez ejecutado el backend, la documentación Swagger está disponible en http://localhost:8080/swagger-ui/index.html
 
 ## 📁 Estructura del proyecto
+```bash
 theca/
 ├── theca-backend/               # Backend Spring Boot
 │   ├── src/main/java/           # Código fuente
@@ -88,6 +89,7 @@ theca/
 ├── Dockerfile
 ├── .github/workflows/ci-cd.yml  # Pipeline CI/CD
 └── README.md
+```
 
 ## 🧪 Pruebas
 ```bash
