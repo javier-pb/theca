@@ -51,3 +51,8 @@
 ```bash
 git clone https://github.com/javier-pb/theca.git
 cd theca
+
+### Backend (Spring Boot)
+cd theca-backend
+mvn clean package
+java -jar target/theca-backend-0.0.1-SNAPSHOT.jar
