@@ -98,7 +98,7 @@ mvn test
 ```
 
 ## 👤 Autor
-Javier Pérez Báez - Estudiante de 2º curso del Grado Superior en Desarrollo de Aplicaciones Multiplataforma - IES Virgen de la Paloma
+Javier Pérez Báez — IES Virgen de la Paloma  
 Tutor: Isidoro Nevares Martín
 
 ## 📄 Licencia
