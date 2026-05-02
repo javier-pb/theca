@@ -1,4 +1,4 @@
-# 📚 Theca - Gestor de Colecciones Digitales
+# 📚 Theca - Gestor de colecciones digitales
 
 ![Java](https://img.shields.io/badge/Java-17+-007396?logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.4-6DB33F?logo=springboot)
