@@ -104,5 +104,5 @@ Tutor: Isidoro Nevares Martín
 ## 📄 Licencia
 Proyecto académico sin fines comerciales.
 
-## 📄 Acceso al frontend
+## Acceso al frontend
 https://github.com/javier-pb/theca-frontend.git
