@@ -19,8 +19,9 @@ import com.theca.backend.entity.Usuario;
 @Repository
 public interface UsuarioRepository extends MongoRepository<Usuario, String> {
 	
-	// Buscar usuario por nombre:
+	// Buscar usuario por nombre y por correo:
 	Optional<Usuario> findByNombre(String nombre);
+	Optional<Usuario> findByCorreo(String correo);
 	// Comprobar si existe un usuario por nombre o correo:
 	boolean existsByNombre(String nombre);
 	boolean existsByCorreo(String correo);
