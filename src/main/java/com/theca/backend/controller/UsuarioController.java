@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.theca.backend.dto.usuario.CambiarContrasenaDTO;
 import com.theca.backend.dto.usuario.CreateUsuarioDTO;
 import com.theca.backend.dto.usuario.EliminarUsuarioDTO;
 import com.theca.backend.dto.usuario.UpdateUsuarioDTO;
@@ -182,6 +183,36 @@ public class UsuarioController {
         usuarioRepository.deleteById(usuario.getId());
         
         return ResponseEntity.ok().body("Cuenta eliminada exitosamente");
+    }
+    
+    @PostMapping("/cambiar-contrasena")
+    @Operation(summary = "Cambiar la contraseña del usuario autenticado", 
+               description = "Permite al usuario cambiar su contraseña verificando la actual")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Contraseña cambiada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Contraseña actual incorrecta o nueva contraseña inválida"),
+        @ApiResponse(responseCode = "401", description = "No autenticado"),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    public ResponseEntity<?> cambiarContrasena(@Valid @RequestBody CambiarContrasenaDTO dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        Usuario usuario = usuarioRepository.findByNombreOrCorreo(username, username)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        if (!passwordEncoder.matches(dto.getContrasenaActual(), usuario.getContrasena())) {
+            return ResponseEntity.badRequest().body("Contraseña actual incorrecta");
+        }
+        
+        if (passwordEncoder.matches(dto.getNuevaContrasena(), usuario.getContrasena())) {
+            return ResponseEntity.badRequest().body("La nueva contraseña debe ser diferente a la actual");
+        }
+        
+        usuario.setContrasena(passwordEncoder.encode(dto.getNuevaContrasena()));
+        usuarioRepository.save(usuario);
+        
+        return ResponseEntity.ok().body("Contraseña cambiada exitosamente");
     }
     
 }
