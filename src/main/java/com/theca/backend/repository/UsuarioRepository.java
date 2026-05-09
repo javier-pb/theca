@@ -25,5 +25,7 @@ public interface UsuarioRepository extends MongoRepository<Usuario, String> {
 	// Comprobar si existe un usuario por nombre o correo:
 	boolean existsByNombre(String nombre);
 	boolean existsByCorreo(String correo);
+	// Buscar usuario por nombre o correo:
+	Optional<Usuario> findByNombreOrCorreo(String nombre, String correo);
 	
 }
