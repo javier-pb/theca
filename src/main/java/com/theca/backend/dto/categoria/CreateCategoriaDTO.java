@@ -15,6 +15,7 @@ public class CreateCategoriaDTO {
 	@NotBlank(message = "El nombre de la categoría es obligatorio")
     private String nombre;
     private String categoriaPadreId;
+    private String usuarioId;
 
     public CreateCategoriaDTO() {}
 
@@ -33,4 +34,13 @@ public class CreateCategoriaDTO {
     public void setCategoriaPadreId(String categoriaPadreId) {
         this.categoriaPadreId = categoriaPadreId;
     }
+    
+    public String getUsuarioId() {
+    	return usuarioId;
+    }
+    
+    public void setUsuarioId(String usuarioId) {
+    	this.usuarioId = usuarioId;
+    }
+    
 }

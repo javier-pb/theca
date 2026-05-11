@@ -29,7 +29,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.theca.backend.dto.categoria.CreateCategoriaDTO;
+import com.theca.backend.dto.categoria.UpdateCategoriaDTO;
 import com.theca.backend.entity.Categoria;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.CategoriaRepository;
@@ -40,52 +45,167 @@ public class CategoriaControllerTest {
     @Mock
     private CategoriaRepository categoriaRepository;
 
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private SecurityContext securityContext;
+
     @InjectMocks
     private CategoriaController categoriaController;
 
     private Categoria c1;
     private Categoria c2;
+    private static final String TEST_USER = "testuser";
 
     @BeforeEach
     void setUp() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(authentication.getName()).thenReturn(TEST_USER);
+
         c1 = new Categoria();
         c1.setId("1");
         c1.setNombre("C1");
         c1.setFechaModificacion(LocalDateTime.now());
         c1.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
+        c1.setUsuarioId(TEST_USER);
 
         c2 = new Categoria();
         c2.setId("2");
         c2.setNombre("C2");
         c2.setFechaModificacion(LocalDateTime.now());
         c2.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
+        c2.setUsuarioId(TEST_USER);
     }
 
     @Test
-    void getAll_ShouldReturnList() {
-        when(categoriaRepository.findAll()).thenReturn(Arrays.asList(c1, c2));
+    void getAll_ShouldReturnListFilteredByUser() {
+        when(categoriaRepository.findByUsuarioId(TEST_USER)).thenReturn(Arrays.asList(c1, c2));
+        
         List<Categoria> result = categoriaController.getAll();
+        
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(categoriaRepository, times(1)).findAll();
+        verify(categoriaRepository, times(1)).findByUsuarioId(TEST_USER);
     }
 
     @Test
-    void getById_ShouldReturnCategoria() {
+    void getById_ShouldReturnCategoria_WhenBelongsToUser() {
         when(categoriaRepository.findById("1")).thenReturn(Optional.of(c1));
+        
         ResponseEntity<Categoria> resp = categoriaController.getById("1");
+        
         assertEquals(HttpStatus.OK, resp.getStatusCode());
         assertEquals("C1", resp.getBody().getNombre());
     }
 
     @Test
-    void create_ShouldSaveCategoria() {
+    void getById_ShouldReturnNotFound_WhenCategoriaNotBelongsToUser() {
+        Categoria categoriaDeOtroUsuario = new Categoria();
+        categoriaDeOtroUsuario.setId("3");
+        categoriaDeOtroUsuario.setNombre("C3");
+        categoriaDeOtroUsuario.setUsuarioId("otheruser");
+        
+        when(categoriaRepository.findById("3")).thenReturn(Optional.of(categoriaDeOtroUsuario));
+        
+        ResponseEntity<Categoria> resp = categoriaController.getById("3");
+        
+        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+    }
+
+    @Test
+    void getById_ShouldReturnNotFound_WhenIdDoesNotExist() {
+        when(categoriaRepository.findById("999")).thenReturn(Optional.empty());
+        
+        ResponseEntity<Categoria> resp = categoriaController.getById("999");
+        
+        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+    }
+
+    @Test
+    void create_ShouldSaveCategoriaWithUser() {
+        CreateCategoriaDTO dto = new CreateCategoriaDTO();
+        dto.setNombre("Nueva Categoria");
+        dto.setCategoriaPadreId(null);
+        
         when(categoriaRepository.save(any(Categoria.class))).thenAnswer(i -> i.getArgument(0));
-        Categoria t = new Categoria();
-        t.setNombre("Nueva");
-        Categoria saved = categoriaController.create(t);
+        
+        Categoria saved = categoriaController.create(dto);
+        
         assertNotNull(saved.getFechaModificacion());
+        assertEquals("Nueva Categoria", saved.getNombre());
+        assertEquals(TEST_USER, saved.getUsuarioId());
         assertEquals(EstadoSincronizacion.PENDIENTE, saved.getEstadoSincronizacion());
         verify(categoriaRepository, times(1)).save(any(Categoria.class));
     }
+
+    @Test
+    void update_ShouldUpdateCategoria_WhenBelongsToUser() {
+        UpdateCategoriaDTO dto = new UpdateCategoriaDTO();
+        dto.setNombre("C1 Actualizada");
+        
+        when(categoriaRepository.findById("1")).thenReturn(Optional.of(c1));
+        when(categoriaRepository.save(any(Categoria.class))).thenAnswer(i -> i.getArgument(0));
+        
+        ResponseEntity<Categoria> resp = categoriaController.update("1", dto);
+        
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals("C1 Actualizada", resp.getBody().getNombre());
+        verify(categoriaRepository, times(1)).save(any(Categoria.class));
+    }
+
+    @Test
+    void update_ShouldReturnNotFound_WhenCategoriaNotBelongsToUser() {
+        UpdateCategoriaDTO dto = new UpdateCategoriaDTO();
+        dto.setNombre("Actualizada");
+        
+        Categoria categoriaDeOtroUsuario = new Categoria();
+        categoriaDeOtroUsuario.setId("3");
+        categoriaDeOtroUsuario.setNombre("C3");
+        categoriaDeOtroUsuario.setUsuarioId("otheruser");
+        
+        when(categoriaRepository.findById("3")).thenReturn(Optional.of(categoriaDeOtroUsuario));
+        
+        ResponseEntity<Categoria> resp = categoriaController.update("3", dto);
+        
+        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+        verify(categoriaRepository, times(0)).save(any(Categoria.class));
+    }
+
+    @Test
+    void delete_ShouldDeleteCategoria_WhenBelongsToUser() {
+        when(categoriaRepository.findById("1")).thenReturn(Optional.of(c1));
+        
+        ResponseEntity<Void> resp = categoriaController.delete("1");
+        
+        assertEquals(HttpStatus.NO_CONTENT, resp.getStatusCode());
+        verify(categoriaRepository, times(1)).deleteById("1");
+    }
+
+    @Test
+    void delete_ShouldReturnNotFound_WhenCategoriaNotBelongsToUser() {
+        Categoria categoriaDeOtroUsuario = new Categoria();
+        categoriaDeOtroUsuario.setId("3");
+        categoriaDeOtroUsuario.setNombre("C3");
+        categoriaDeOtroUsuario.setUsuarioId("otheruser");
+        
+        when(categoriaRepository.findById("3")).thenReturn(Optional.of(categoriaDeOtroUsuario));
+        
+        ResponseEntity<Void> resp = categoriaController.delete("3");
+        
+        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+        verify(categoriaRepository, times(0)).deleteById(any());
+    }
+
+    @Test
+    void delete_ShouldReturnNotFound_WhenIdDoesNotExist() {
+        when(categoriaRepository.findById("999")).thenReturn(Optional.empty());
+        
+        ResponseEntity<Void> resp = categoriaController.delete("999");
+        
+        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+        verify(categoriaRepository, times(0)).deleteById(any());
+    }
+    
 }
