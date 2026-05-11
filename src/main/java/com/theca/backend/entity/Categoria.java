@@ -28,15 +28,18 @@ public class Categoria {
     private LocalDateTime fechaModificacion;
     private EstadoSincronizacion estadoSincronizacion;
     private String categoriaPadreId;
+    private String usuarioId;
     
     public Categoria() {}
     
-    public Categoria(String id, String nombre, LocalDateTime fechaModificacion, EstadoSincronizacion estadoSincronizacion, String categoriaPadreId) {
+    public Categoria(String id, String nombre, LocalDateTime fechaModificacion, EstadoSincronizacion estadoSincronizacion, String categoriaPadreId,
+    				 String usuarioId) {
         this.id = id;
         this.nombre = nombre;
         this.fechaModificacion = fechaModificacion;
         this.estadoSincronizacion = estadoSincronizacion;
         this.categoriaPadreId = categoriaPadreId;
+        this.usuarioId = usuarioId;
     }
     
     public String getId() {
@@ -77,6 +80,14 @@ public class Categoria {
     
     public void setCategoriaPadreId(String categoriaPadreId) {
         this.categoriaPadreId = categoriaPadreId;
+    }
+    
+    public String getUsuarioId() {
+    	return usuarioId;
+    }
+    
+    public void setUsuarioId(String usuarioId) {
+    	this.usuarioId = usuarioId;
     }
 
 }

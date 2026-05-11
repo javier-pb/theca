@@ -7,6 +7,7 @@
  * 
  */
 
+// CategoriaController.java
 package com.theca.backend.controller;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,8 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.theca.backend.dto.categoria.CreateCategoriaDTO;
 import com.theca.backend.dto.categoria.UpdateCategoriaDTO;
 import com.theca.backend.entity.Categoria;
 import com.theca.backend.enums.EstadoSincronizacion;
@@ -47,76 +51,104 @@ public class CategoriaController {
     }
 
     @GetMapping
-    @Operation(summary = "Obtener todas las categorías", description = "Devuelve una lista de todas las categorías")
+    @Operation(summary = "Obtener todas las categorías del usuario autenticado")
     @ApiResponses({
-    	@ApiResponse(responseCode = "200", description = "Lista de categorías obtenida exitosamente"),
-    	@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+        @ApiResponse(responseCode = "200", description = "Lista de categorías obtenida exitosamente"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public List<Categoria> getAll() {
-        return categoriaRepository.findAll();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        return categoriaRepository.findByUsuarioId(username);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener categoría por ID", description = "Devuelve una categoría específica según su ID")
     @ApiResponses({
-		@ApiResponse(responseCode = "200", description = "Categoría obtenida exitosamente"),
-		@ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
-		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
-	})
+        @ApiResponse(responseCode = "200", description = "Categoría obtenida exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public ResponseEntity<Categoria> getById(@PathVariable String id) {
-        return categoriaRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        return categoriaRepository.findById(id)
+                .filter(categoria -> categoria.getUsuarioId().equals(username))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Crear nueva categoría", description = "Crea una nueva categoría con los datos proporcionados")
     @ApiResponses({
-		@ApiResponse(responseCode = "201", description = "Categoría creada exitosamente"),
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida"),
-		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
-	})
-    public Categoria create(@RequestBody Categoria categoria) {
+        @ApiResponse(responseCode = "201", description = "Categoría creada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public Categoria create(@Valid @RequestBody CreateCategoriaDTO dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        Categoria categoria = new Categoria();
+        categoria.setNombre(dto.getNombre());
+        categoria.setCategoriaPadreId(dto.getCategoriaPadreId());
+        categoria.setUsuarioId(username);
         categoria.setFechaModificacion(LocalDateTime.now());
         categoria.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
+        
         return categoriaRepository.save(categoria);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar categoría existente", description = "Actualiza una categoría existente con los datos proporcionados")
     @ApiResponses({
-    	@ApiResponse(responseCode = "200", description = "Categoría actualizada exitosamente"),
-    	@ApiResponse(responseCode = "400", description = "Solicitud inválida"),
-    	@ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
+        @ApiResponse(responseCode = "200", description = "Categoría actualizada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+        @ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
     })
     public ResponseEntity<Categoria> update(@PathVariable String id,
-    										@Valid @RequestBody UpdateCategoriaDTO categoriaActualizada) {
-        return categoriaRepository.findById(id).map(categoriaExistente -> {
-            if (categoriaActualizada.getNombre() != null) {
-                categoriaExistente.setNombre(categoriaActualizada.getNombre());
-            }
-            if (categoriaActualizada.getCategoriaPadreId() != null) {
-                categoriaExistente.setCategoriaPadreId(categoriaActualizada.getCategoriaPadreId());
-            }
-            if (categoriaActualizada.getEstadoSincronizacion() != null) {
-                categoriaExistente.setEstadoSincronizacion(categoriaActualizada.getEstadoSincronizacion());
-            }
-            categoriaExistente.setFechaModificacion(LocalDateTime.now());
-            return ResponseEntity.ok(categoriaRepository.save(categoriaExistente));
-        }).orElse(ResponseEntity.notFound().build());
+                                            @Valid @RequestBody UpdateCategoriaDTO dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        return categoriaRepository.findById(id)
+                .filter(categoria -> categoria.getUsuarioId().equals(username))
+                .map(categoriaExistente -> {
+                    if (dto.getNombre() != null) {
+                        categoriaExistente.setNombre(dto.getNombre());
+                    }
+                    if (dto.getCategoriaPadreId() != null) {
+                        categoriaExistente.setCategoriaPadreId(dto.getCategoriaPadreId());
+                    }
+                    if (dto.getEstadoSincronizacion() != null) {
+                        categoriaExistente.setEstadoSincronizacion(dto.getEstadoSincronizacion());
+                    }
+                    categoriaExistente.setFechaModificacion(LocalDateTime.now());
+                    return ResponseEntity.ok(categoriaRepository.save(categoriaExistente));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar categoría", description = "Elimina una categoría específica según su ID")
     @ApiResponses({
-		@ApiResponse(responseCode = "204", description = "Categoría eliminada exitosamente"),
-		@ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
-		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
-	})
+        @ApiResponse(responseCode = "204", description = "Categoría eliminada exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     public ResponseEntity<Void> delete(@PathVariable String id) {
-        if (categoriaRepository.existsById(id)) {
-            categoriaRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        return categoriaRepository.findById(id)
+                .filter(categoria -> categoria.getUsuarioId().equals(username))
+                .map(categoria -> {
+                    categoriaRepository.deleteById(id);
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
+    
 }

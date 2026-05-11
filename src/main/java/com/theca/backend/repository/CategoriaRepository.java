@@ -9,10 +9,17 @@
 
 package com.theca.backend.repository;
 
+import java.util.List;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import com.theca.backend.entity.Categoria;
 
 @Repository
-public interface CategoriaRepository extends MongoRepository<Categoria, String> {}
+public interface CategoriaRepository extends MongoRepository<Categoria, String> {
+	
+	// Método para encontrar categorías por usuario:
+	List<Categoria> findByUsuarioId(String usuarioId);
+	
+}
