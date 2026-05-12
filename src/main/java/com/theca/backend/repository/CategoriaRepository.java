@@ -21,5 +21,8 @@ public interface CategoriaRepository extends MongoRepository<Categoria, String> 
 	
 	// Método para encontrar categorías por usuario:
 	List<Categoria> findByUsuarioId(String usuarioId);
+	// Métodos para verificar si ya existe una categoría con el mismo nombre para un usuario
+	boolean existsByNombreAndUsuarioId(String nombre, String usuarioId);
+	boolean existsByNombreAndUsuarioIdAndIdNot(String nombre, String usuarioId, String id);
 	
 }

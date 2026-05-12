@@ -7,7 +7,6 @@
  * 
  */
 
-// CategoriaController.java
 package com.theca.backend.controller;
 
 import java.time.LocalDateTime;
@@ -87,9 +86,13 @@ public class CategoriaController {
         @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
-    public Categoria create(@Valid @RequestBody CreateCategoriaDTO dto) {
+    public ResponseEntity<?> create(@Valid @RequestBody CreateCategoriaDTO dto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
+        
+        if (categoriaRepository.existsByNombreAndUsuarioId(dto.getNombre(), username)) {
+            return ResponseEntity.badRequest().body("Ya existe una categoría con el nombre '" + dto.getNombre() + "'");
+        }
         
         Categoria categoria = new Categoria();
         categoria.setNombre(dto.getNombre());
@@ -98,7 +101,7 @@ public class CategoriaController {
         categoria.setFechaModificacion(LocalDateTime.now());
         categoria.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
         
-        return categoriaRepository.save(categoria);
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaRepository.save(categoria));
     }
 
     @PutMapping("/{id}")
@@ -108,17 +111,21 @@ public class CategoriaController {
         @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
         @ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
     })
-    public ResponseEntity<Categoria> update(@PathVariable String id,
-                                            @Valid @RequestBody UpdateCategoriaDTO dto) {
+    public ResponseEntity<?> update(@PathVariable String id,
+                                    @Valid @RequestBody UpdateCategoriaDTO dto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         
         return categoriaRepository.findById(id)
                 .filter(categoria -> categoria.getUsuarioId().equals(username))
                 .map(categoriaExistente -> {
-                    if (dto.getNombre() != null) {
+                    if (dto.getNombre() != null && !dto.getNombre().equals(categoriaExistente.getNombre())) {
+                        if (categoriaRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), username, id)) {
+                            return ResponseEntity.badRequest().body("Ya existe una categoría con el nombre '" + dto.getNombre() + "'");
+                        }
                         categoriaExistente.setNombre(dto.getNombre());
                     }
+                    
                     if (dto.getCategoriaPadreId() != null) {
                         categoriaExistente.setCategoriaPadreId(dto.getCategoriaPadreId());
                     }
