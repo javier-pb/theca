@@ -12,6 +12,7 @@ package com.theca.backend.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -124,15 +125,18 @@ public class CategoriaControllerTest {
     }
 
     @Test
-    void create_ShouldSaveCategoriaWithUser() {
+    void create_ShouldSaveCategoriaWithUser_WhenNombreIsUnique() {
         CreateCategoriaDTO dto = new CreateCategoriaDTO();
         dto.setNombre("Nueva Categoria");
         dto.setCategoriaPadreId(null);
         
+        when(categoriaRepository.existsByNombreAndUsuarioId(dto.getNombre(), TEST_USER)).thenReturn(false);
         when(categoriaRepository.save(any(Categoria.class))).thenAnswer(i -> i.getArgument(0));
         
-        Categoria saved = categoriaController.create(dto);
+        ResponseEntity<?> response = categoriaController.create(dto);
         
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        Categoria saved = (Categoria) response.getBody();
         assertNotNull(saved.getFechaModificacion());
         assertEquals("Nueva Categoria", saved.getNombre());
         assertEquals(TEST_USER, saved.getUsuarioId());
@@ -141,17 +145,64 @@ public class CategoriaControllerTest {
     }
 
     @Test
-    void update_ShouldUpdateCategoria_WhenBelongsToUser() {
+    void create_ShouldReturnBadRequest_WhenNombreAlreadyExists() {
+        CreateCategoriaDTO dto = new CreateCategoriaDTO();
+        dto.setNombre("C1");
+        dto.setCategoriaPadreId(null);
+        
+        when(categoriaRepository.existsByNombreAndUsuarioId(dto.getNombre(), TEST_USER)).thenReturn(true);
+        
+        ResponseEntity<?> response = categoriaController.create(dto);
+        
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Ya existe una categoría con el nombre 'C1'", response.getBody());
+        verify(categoriaRepository, never()).save(any(Categoria.class));
+    }
+
+    @Test
+    void update_ShouldUpdateCategoria_WhenBelongsToUserAndNombreIsUnique() {
         UpdateCategoriaDTO dto = new UpdateCategoriaDTO();
         dto.setNombre("C1 Actualizada");
         
         when(categoriaRepository.findById("1")).thenReturn(Optional.of(c1));
+        when(categoriaRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), TEST_USER, "1")).thenReturn(false);
         when(categoriaRepository.save(any(Categoria.class))).thenAnswer(i -> i.getArgument(0));
         
-        ResponseEntity<Categoria> resp = categoriaController.update("1", dto);
+        ResponseEntity<?> response = categoriaController.update("1", dto);
         
-        assertEquals(HttpStatus.OK, resp.getStatusCode());
-        assertEquals("C1 Actualizada", resp.getBody().getNombre());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        Categoria updated = (Categoria) response.getBody();
+        assertEquals("C1 Actualizada", updated.getNombre());
+        verify(categoriaRepository, times(1)).save(any(Categoria.class));
+    }
+
+    @Test
+    void update_ShouldReturnBadRequest_WhenNombreAlreadyExists() {
+        UpdateCategoriaDTO dto = new UpdateCategoriaDTO();
+        dto.setNombre("C2");
+        
+        when(categoriaRepository.findById("1")).thenReturn(Optional.of(c1));
+        when(categoriaRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), TEST_USER, "1")).thenReturn(true);
+        
+        ResponseEntity<?> response = categoriaController.update("1", dto);
+        
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Ya existe una categoría con el nombre 'C2'", response.getBody());
+        verify(categoriaRepository, never()).save(any(Categoria.class));
+    }
+
+    @Test
+    void update_ShouldSkipNombreValidation_WhenNombreNotChanged() {
+        UpdateCategoriaDTO dto = new UpdateCategoriaDTO();
+        dto.setNombre("C1");
+        
+        when(categoriaRepository.findById("1")).thenReturn(Optional.of(c1));
+        when(categoriaRepository.save(any(Categoria.class))).thenAnswer(i -> i.getArgument(0));
+        
+        ResponseEntity<?> response = categoriaController.update("1", dto);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(categoriaRepository, never()).existsByNombreAndUsuarioIdAndIdNot(any(), any(), any());
         verify(categoriaRepository, times(1)).save(any(Categoria.class));
     }
 
@@ -167,10 +218,10 @@ public class CategoriaControllerTest {
         
         when(categoriaRepository.findById("3")).thenReturn(Optional.of(categoriaDeOtroUsuario));
         
-        ResponseEntity<Categoria> resp = categoriaController.update("3", dto);
+        ResponseEntity<?> response = categoriaController.update("3", dto);
         
-        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
-        verify(categoriaRepository, times(0)).save(any(Categoria.class));
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(categoriaRepository, never()).save(any(Categoria.class));
     }
 
     @Test
@@ -195,7 +246,7 @@ public class CategoriaControllerTest {
         ResponseEntity<Void> resp = categoriaController.delete("3");
         
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
-        verify(categoriaRepository, times(0)).deleteById(any());
+        verify(categoriaRepository, never()).deleteById(any());
     }
 
     @Test
@@ -205,7 +256,7 @@ public class CategoriaControllerTest {
         ResponseEntity<Void> resp = categoriaController.delete("999");
         
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
-        verify(categoriaRepository, times(0)).deleteById(any());
+        verify(categoriaRepository, never()).deleteById(any());
     }
     
 }
