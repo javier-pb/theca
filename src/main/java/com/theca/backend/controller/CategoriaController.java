@@ -139,7 +139,7 @@ public class CategoriaController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar categoría", description = "Elimina una categoría específica según su ID")
+    @Operation(summary = "Eliminar categoría", description = "Elimina una categoría específica y todas sus subcategorías")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Categoría eliminada exitosamente"),
         @ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
@@ -152,10 +152,19 @@ public class CategoriaController {
         return categoriaRepository.findById(id)
                 .filter(categoria -> categoria.getUsuarioId().equals(username))
                 .map(categoria -> {
-                    categoriaRepository.deleteById(id);
+                    eliminarCascada(id);
                     return ResponseEntity.noContent().<Void>build();
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Método recursivo para eliminar una categoría y todas sus subcategorías:
+    private void eliminarCascada(String categoriaId) {
+        List<Categoria> subcategorias = categoriaRepository.findByCategoriaPadreId(categoriaId);
+        for (Categoria subcategoria : subcategorias) {
+            eliminarCascada(subcategoria.getId());
+        }
+        categoriaRepository.deleteById(categoriaId);
     }
     
 }

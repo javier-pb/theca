@@ -24,5 +24,7 @@ public interface CategoriaRepository extends MongoRepository<Categoria, String> 
 	// Métodos para verificar si ya existe una categoría con el mismo nombre para un usuario
 	boolean existsByNombreAndUsuarioId(String nombre, String usuarioId);
 	boolean existsByNombreAndUsuarioIdAndIdNot(String nombre, String usuarioId, String id);
+	// Método para encontrar subcategorías por categoría padre:
+	List<Categoria> findByCategoriaPadreId(String categoriaPadreId);
 	
 }
