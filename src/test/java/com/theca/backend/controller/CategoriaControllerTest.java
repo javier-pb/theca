@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,6 +58,8 @@ public class CategoriaControllerTest {
 
     private Categoria c1;
     private Categoria c2;
+    private Categoria subcategoria1;
+    private Categoria subcategoria2;
     private static final String TEST_USER = "testuser";
 
     @BeforeEach
@@ -71,6 +74,7 @@ public class CategoriaControllerTest {
         c1.setFechaModificacion(LocalDateTime.now());
         c1.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
         c1.setUsuarioId(TEST_USER);
+        c1.setCategoriaPadreId(null);
 
         c2 = new Categoria();
         c2.setId("2");
@@ -78,6 +82,23 @@ public class CategoriaControllerTest {
         c2.setFechaModificacion(LocalDateTime.now());
         c2.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
         c2.setUsuarioId(TEST_USER);
+        c2.setCategoriaPadreId(null);
+
+        subcategoria1 = new Categoria();
+        subcategoria1.setId("11");
+        subcategoria1.setNombre("Subcategoria 1");
+        subcategoria1.setFechaModificacion(LocalDateTime.now());
+        subcategoria1.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
+        subcategoria1.setUsuarioId(TEST_USER);
+        subcategoria1.setCategoriaPadreId("1");
+
+        subcategoria2 = new Categoria();
+        subcategoria2.setId("12");
+        subcategoria2.setNombre("Subcategoria 2");
+        subcategoria2.setFechaModificacion(LocalDateTime.now());
+        subcategoria2.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
+        subcategoria2.setUsuarioId(TEST_USER);
+        subcategoria2.setCategoriaPadreId("1");
     }
 
     @Test
@@ -223,15 +244,56 @@ public class CategoriaControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(categoriaRepository, never()).save(any(Categoria.class));
     }
+    
+    @Test
+    void delete_ShouldDeleteCategoria_WhenBelongsToUserAndHasNoSubcategorias() {
+        when(categoriaRepository.findById("2")).thenReturn(Optional.of(c2));
+        when(categoriaRepository.findByCategoriaPadreId("2")).thenReturn(Collections.emptyList());
+        
+        ResponseEntity<Void> resp = categoriaController.delete("2");
+        
+        assertEquals(HttpStatus.NO_CONTENT, resp.getStatusCode());
+        verify(categoriaRepository, times(1)).deleteById("2");
+    }
 
     @Test
-    void delete_ShouldDeleteCategoria_WhenBelongsToUser() {
+    void delete_ShouldDeleteCategoriaAndSubcategorias_WhenHasSubcategorias() {
         when(categoriaRepository.findById("1")).thenReturn(Optional.of(c1));
+        when(categoriaRepository.findByCategoriaPadreId("1")).thenReturn(Arrays.asList(subcategoria1, subcategoria2));
+        when(categoriaRepository.findByCategoriaPadreId("11")).thenReturn(Collections.emptyList());
+        when(categoriaRepository.findByCategoriaPadreId("12")).thenReturn(Collections.emptyList());
         
         ResponseEntity<Void> resp = categoriaController.delete("1");
         
         assertEquals(HttpStatus.NO_CONTENT, resp.getStatusCode());
         verify(categoriaRepository, times(1)).deleteById("1");
+        verify(categoriaRepository, times(1)).deleteById("11");
+        verify(categoriaRepository, times(1)).deleteById("12");
+    }
+
+    @Test
+    void delete_ShouldDeleteCategoriaAndAllNestedSubcategorias_WhenMultipleLevels() {
+        Categoria nieto = new Categoria();
+        nieto.setId("111");
+        nieto.setNombre("Nieto");
+        nieto.setFechaModificacion(LocalDateTime.now());
+        nieto.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
+        nieto.setUsuarioId(TEST_USER);
+        nieto.setCategoriaPadreId("11");
+        
+        when(categoriaRepository.findById("1")).thenReturn(Optional.of(c1));
+        when(categoriaRepository.findByCategoriaPadreId("1")).thenReturn(Arrays.asList(subcategoria1, subcategoria2));
+        when(categoriaRepository.findByCategoriaPadreId("11")).thenReturn(Arrays.asList(nieto));
+        when(categoriaRepository.findByCategoriaPadreId("12")).thenReturn(Collections.emptyList());
+        when(categoriaRepository.findByCategoriaPadreId("111")).thenReturn(Collections.emptyList());
+        
+        ResponseEntity<Void> resp = categoriaController.delete("1");
+        
+        assertEquals(HttpStatus.NO_CONTENT, resp.getStatusCode());
+        verify(categoriaRepository, times(1)).deleteById("1");
+        verify(categoriaRepository, times(1)).deleteById("11");
+        verify(categoriaRepository, times(1)).deleteById("12");
+        verify(categoriaRepository, times(1)).deleteById("111");
     }
 
     @Test
@@ -247,6 +309,7 @@ public class CategoriaControllerTest {
         
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
         verify(categoriaRepository, never()).deleteById(any());
+        verify(categoriaRepository, never()).findByCategoriaPadreId(any());
     }
 
     @Test
