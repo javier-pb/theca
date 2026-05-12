@@ -13,6 +13,7 @@ public class CreateEtiquetaDTO {
 
 	@NotBlank(message = "El nombre de la etiqueta es obligatorio")
     private String nombre;
+	private String usuarioId;
 
     public CreateEtiquetaDTO() {}
 
@@ -23,4 +24,13 @@ public class CreateEtiquetaDTO {
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
+
+	public String getUsuarioId() {
+		return usuarioId;
+	}
+
+	public void setUsuarioId(String usuarioId) {
+		this.usuarioId = usuarioId;
+	}
+    
 }
