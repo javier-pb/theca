@@ -34,17 +34,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.theca.backend.dto.autor.AsociarRecursosDTO;
 import com.theca.backend.dto.autor.CreateAutorDTO;
 import com.theca.backend.dto.autor.UpdateAutorDTO;
 import com.theca.backend.entity.Autor;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.AutorRepository;
+import com.theca.backend.repository.RecursoRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class AutorControllerTest {
 
     @Mock
     private AutorRepository autorRepository;
+
+    @Mock
+    private RecursoRepository recursoRepository;
 
     @Mock
     private Authentication authentication;
@@ -192,7 +197,7 @@ public class AutorControllerTest {
     @Test
     void update_ShouldSkipNombreValidation_WhenNombreNotChanged() {
         UpdateAutorDTO dto = new UpdateAutorDTO();
-        dto.setNombre("Gabriel García Márquez"); // Mismo nombre
+        dto.setNombre("Gabriel García Márquez");
         
         when(autorRepository.findById("1")).thenReturn(Optional.of(autor1));
         when(autorRepository.save(any(Autor.class))).thenAnswer(i -> i.getArgument(0));
@@ -274,6 +279,60 @@ public class AutorControllerTest {
         ResponseEntity<?> response = autorController.getRecursosAsociados("999");
         
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void asociarRecursos_ShouldAsociarRecursos_WhenAutorExists() {
+        AsociarRecursosDTO dto = new AsociarRecursosDTO();
+        dto.setRecursosIds(Arrays.asList("r1", "r2"));
+        
+        when(autorRepository.findById("1")).thenReturn(Optional.of(autor1));
+        
+        ResponseEntity<?> response = autorController.asociarRecursos("1", dto);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Recursos asociados exitosamente", response.getBody());
+        verify(recursoRepository, times(1)).asociarAutor("1", dto.getRecursosIds());
+    }
+
+    @Test
+    void asociarRecursos_ShouldReturnNotFound_WhenAutorNotExists() {
+        AsociarRecursosDTO dto = new AsociarRecursosDTO();
+        dto.setRecursosIds(Arrays.asList("r1", "r2"));
+        
+        when(autorRepository.findById("999")).thenReturn(Optional.empty());
+        
+        ResponseEntity<?> response = autorController.asociarRecursos("999", dto);
+        
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(recursoRepository, never()).asociarAutor(any(), any());
+    }
+
+    @Test
+    void desasociarRecursos_ShouldDesasociarRecursos_WhenAutorExists() {
+        AsociarRecursosDTO dto = new AsociarRecursosDTO();
+        dto.setRecursosIds(Arrays.asList("r1", "r2"));
+        
+        when(autorRepository.findById("1")).thenReturn(Optional.of(autor1));
+        
+        ResponseEntity<?> response = autorController.desasociarRecursos("1", dto);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Recursos desasociados exitosamente", response.getBody());
+        verify(recursoRepository, times(1)).desasociarAutor("1", dto.getRecursosIds());
+    }
+
+    @Test
+    void desasociarRecursos_ShouldReturnNotFound_WhenAutorNotExists() {
+        AsociarRecursosDTO dto = new AsociarRecursosDTO();
+        dto.setRecursosIds(Arrays.asList("r1", "r2"));
+        
+        when(autorRepository.findById("999")).thenReturn(Optional.empty());
+        
+        ResponseEntity<?> response = autorController.desasociarRecursos("999", dto);
+        
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(recursoRepository, never()).desasociarAutor(any(), any());
     }
     
 }
