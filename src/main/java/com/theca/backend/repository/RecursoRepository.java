@@ -12,6 +12,7 @@ package com.theca.backend.repository;
 import java.util.List;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.theca.backend.entity.Recurso;
@@ -25,5 +26,12 @@ public interface RecursoRepository extends MongoRepository<Recurso, String> {
     
     // Buscar recursos de un usuario por su ID:
     List<Recurso> findByUsuarioId(String usuarioId);
+    
+    // Métodos para asociar/desasociar autores:
+    @Query("{ 'id': { $in: ?0 } }")
+    void asociarAutor(String autorId, List<String> recursosIds);
+
+    @Query("{ 'id': { $in: ?0 } }")
+    void desasociarAutor(String autorId, List<String> recursosIds);
     
 }
