@@ -26,11 +26,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.theca.backend.dto.autor.AsociarRecursosDTO;
 import com.theca.backend.dto.autor.CreateAutorDTO;
 import com.theca.backend.dto.autor.UpdateAutorDTO;
 import com.theca.backend.entity.Autor;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.AutorRepository;
+import com.theca.backend.repository.RecursoRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -44,9 +46,11 @@ import jakarta.validation.Valid;
 public class AutorController {
 
     private final AutorRepository autorRepository;
+    private final RecursoRepository recursoRepository;
 
-    public AutorController(AutorRepository autorRepository) {
+    public AutorController(AutorRepository autorRepository, RecursoRepository recursoRepository) {
         this.autorRepository = autorRepository;
+        this.recursoRepository = recursoRepository;
     }
 
     @GetMapping
@@ -169,6 +173,46 @@ public class AutorController {
                 .filter(autor -> autor.getUsuarioId().equals(username))
                 .map(autor -> {
                     return ResponseEntity.ok().body(java.util.Collections.emptyList());
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+    
+    @PostMapping("/{id}/recursos")
+    @Operation(summary = "Asociar recursos a un autor", description = "Asocia una lista de recursos a un autor")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Recursos asociados exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Autor no encontrado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public ResponseEntity<?> asociarRecursos(@PathVariable String id, @RequestBody AsociarRecursosDTO dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        return autorRepository.findById(id)
+                .filter(autor -> autor.getUsuarioId().equals(username))
+                .map(autor -> {
+                    recursoRepository.asociarAutor(id, dto.getRecursosIds());
+                    return ResponseEntity.ok().body("Recursos asociados exitosamente");
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}/recursos")
+    @Operation(summary = "Desasociar recursos de un autor", description = "Desasocia recursos de un autor")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Recursos desasociados exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Autor no encontrado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public ResponseEntity<?> desasociarRecursos(@PathVariable String id, @RequestBody AsociarRecursosDTO dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        return autorRepository.findById(id)
+                .filter(autor -> autor.getUsuarioId().equals(username))
+                .map(autor -> {
+                    recursoRepository.desasociarAutor(id, dto.getRecursosIds());
+                    return ResponseEntity.ok().body("Recursos desasociados exitosamente");
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
