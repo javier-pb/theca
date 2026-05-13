@@ -11,6 +11,7 @@ package com.theca.backend.dto.autor;
 public class CreateAutorDTO {
 
     private String nombre;
+    private String usuarioId;
 
     public CreateAutorDTO() {}
 
@@ -21,4 +22,13 @@ public class CreateAutorDTO {
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
+
+	public String getUsuarioId() {
+		return usuarioId;
+	}
+
+	public void setUsuarioId(String usuarioId) {
+		this.usuarioId = usuarioId;
+	}
+    
 }
