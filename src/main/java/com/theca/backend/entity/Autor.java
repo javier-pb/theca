@@ -27,14 +27,16 @@ public class Autor {
     private String nombre;
     private LocalDateTime fechaModificacion;
     private EstadoSincronizacion estadoSincronizacion;
+    private String usuarioId;
     
     public Autor() {}
     
-    public Autor(String id, String nombre, LocalDateTime fechaModificacion, EstadoSincronizacion estadoSincronizacion) {
+    public Autor(String id, String nombre, LocalDateTime fechaModificacion, EstadoSincronizacion estadoSincronizacion, String usuarioId) {
         this.id = id;
         this.nombre = nombre;
         this.fechaModificacion = fechaModificacion;
         this.estadoSincronizacion = estadoSincronizacion;
+        this.usuarioId = usuarioId;
     }
     
     public String getId() {
@@ -68,5 +70,13 @@ public class Autor {
     public void setEstadoSincronizacion(EstadoSincronizacion estadoSincronizacion) {
         this.estadoSincronizacion = estadoSincronizacion;
     }
+
+	public String getUsuarioId() {
+		return usuarioId;
+	}
+
+	public void setUsuarioId(String usuarioId) {
+		this.usuarioId = usuarioId;
+	}
 	
 }
