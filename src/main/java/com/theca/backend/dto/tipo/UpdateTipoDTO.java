@@ -16,6 +16,7 @@ public class UpdateTipoDTO {
 
 	@NotBlank(message = "El nombre del tipo de recurso es obligatorio")
     private String nombre;
+	private byte[] imagen;
     private EstadoSincronizacion estadoSincronizacion;
 
     public UpdateTipoDTO() {}
@@ -28,7 +29,15 @@ public class UpdateTipoDTO {
     	this.nombre = nombre;
     }
 
-    public EstadoSincronizacion getEstadoSincronizacion() {
+    public byte[] getImagen() {
+		return imagen;
+	}
+
+	public void setImagen(byte[] imagen) {
+		this.imagen = imagen;
+	}
+
+	public EstadoSincronizacion getEstadoSincronizacion() {
     	return estadoSincronizacion;
     }
     
