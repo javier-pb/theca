@@ -11,6 +11,7 @@ package com.theca.backend.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ import com.theca.backend.dto.tipo.UpdateTipoDTO;
 import com.theca.backend.entity.Tipo;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.TipoRepository;
+import com.theca.backend.security.jwt.JwtUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -44,9 +46,23 @@ import jakarta.validation.Valid;
 public class TipoController {
 
     private final TipoRepository tipoRepository;
+    private final JwtUtils jwtUtils;
 
-    public TipoController(TipoRepository tipoRepository) {
+    public TipoController(TipoRepository tipoRepository, JwtUtils jwtUtils) {
         this.tipoRepository = tipoRepository;
+        this.jwtUtils = jwtUtils;
+    }
+
+    // Método auxiliar para obtener el userId del token:
+    private String getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Object details = auth.getDetails();
+        if (details instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> detailsMap = (Map<String, Object>) details;
+            return (String) detailsMap.get("userId");
+        }
+        return null;
     }
 
     @GetMapping
@@ -56,9 +72,11 @@ public class TipoController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public List<Tipo> getAll() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        return tipoRepository.findByUsuarioId(username);
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return List.of();
+        }
+        return tipoRepository.findByUsuarioId(userId);
     }
 
     @GetMapping("/{id}")
@@ -69,11 +87,13 @@ public class TipoController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<Tipo> getById(@PathVariable String id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.notFound().build();
+        }
         
         return tipoRepository.findById(id)
-                .filter(tipo -> tipo.getUsuarioId().equals(username))
+                .filter(tipo -> tipo.getUsuarioId().equals(userId))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -87,17 +107,19 @@ public class TipoController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<?> create(@Valid @RequestBody CreateTipoDTO dto) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().body("Usuario no autenticado");
+        }
         
-        if (tipoRepository.existsByNombreAndUsuarioId(dto.getNombre(), username)) {
+        if (tipoRepository.existsByNombreAndUsuarioId(dto.getNombre(), userId)) {
             return ResponseEntity.badRequest().body("Ya existe un tipo con el nombre '" + dto.getNombre() + "'");
         }
         
         Tipo tipo = new Tipo();
         tipo.setNombre(dto.getNombre());
         tipo.setImagen(dto.getImagen());
-        tipo.setUsuarioId(username);
+        tipo.setUsuarioId(userId);
         tipo.setFechaModificacion(LocalDateTime.now());
         tipo.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
         tipo.setEsPredeterminado(false);
@@ -114,14 +136,16 @@ public class TipoController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody UpdateTipoDTO dto) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().body("Usuario no autenticado");
+        }
         
         return tipoRepository.findById(id)
-                .filter(tipo -> tipo.getUsuarioId().equals(username))
+                .filter(tipo -> tipo.getUsuarioId().equals(userId))
                 .map(tipoExistente -> {
                     if (dto.getNombre() != null && !dto.getNombre().equals(tipoExistente.getNombre())) {
-                        if (tipoRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), username, id)) {
+                        if (tipoRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), userId, id)) {
                             return ResponseEntity.badRequest().body("Ya existe un tipo con el nombre '" + dto.getNombre() + "'");
                         }
                         tipoExistente.setNombre(dto.getNombre());
@@ -148,11 +172,13 @@ public class TipoController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<?> delete(@PathVariable String id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().body("Usuario no autenticado");
+        }
         
         return tipoRepository.findById(id)
-                .filter(tipo -> tipo.getUsuarioId().equals(username))
+                .filter(tipo -> tipo.getUsuarioId().equals(userId))
                 .map(tipo -> {
                     if (tipo.isEsPredeterminado()) {
                         return ResponseEntity.badRequest().body("No se puede eliminar un tipo predeterminado");

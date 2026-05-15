@@ -70,8 +70,12 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        
+        Usuario usuario = usuarioRepository.findByNombre(userDetails.getUsername())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        String jwt = jwtUtils.generateJwtTokenWithUserId(authentication, usuario.getId());
         
         return ResponseEntity.ok(new LoginResponseDTO(jwt,
                                                       userDetails.getId(),
@@ -107,4 +111,5 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body("¡Usuario registrado con éxito!");
     }
+    
 }
