@@ -14,6 +14,8 @@ public class CreateTipoDTO {
 
 	@NotBlank(message = "El nombre del tipo de recurso es obligatorio")
     private String nombre;
+	private byte[] imagen;
+    private String usuarioId;
 
     public CreateTipoDTO() {}
 
@@ -24,4 +26,21 @@ public class CreateTipoDTO {
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
+
+	public byte[] getImagen() {
+		return imagen;
+	}
+
+	public void setImagen(byte[] imagen) {
+		this.imagen = imagen;
+	}
+
+	public String getUsuarioId() {
+		return usuarioId;
+	}
+
+	public void setUsuarioId(String usuarioId) {
+		this.usuarioId = usuarioId;
+	}
+    
 }

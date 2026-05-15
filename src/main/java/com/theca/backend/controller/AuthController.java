@@ -31,6 +31,7 @@ import com.theca.backend.entity.Usuario;
 import com.theca.backend.repository.UsuarioRepository;
 import com.theca.backend.security.jwt.JwtUtils;
 import com.theca.backend.security.services.UserDetailsImpl;
+import com.theca.backend.service.TipoService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,7 +39,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-// Controlador para la autenticación:
 @RestController
 @Tag(name = "Autenticación", description = "Endpoints para registro y login")
 @RequestMapping("/api/auth")
@@ -56,7 +56,9 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
-    // Endpoint para login:
+    @Autowired
+    TipoService tipoService;
+
     @PostMapping("/login")
     @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y devuelve un token JWT")
     @ApiResponses(value = {
@@ -66,19 +68,18 @@ public class AuthController {
     })
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequestDTO loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
-        	new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+            new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         
         return ResponseEntity.ok(new LoginResponseDTO(jwt,
-        											  userDetails.getId(),
-        											  userDetails.getUsername(),
-        											  userDetails.getEmail(),
-        											  Collections.emptyList()));
+                                                      userDetails.getId(),
+                                                      userDetails.getUsername(),
+                                                      userDetails.getEmail(),
+                                                      Collections.emptyList()));
     }
 
-    // Endpoint para registro:
     @PostMapping("/register")
     @Operation(summary = "Registrar usuario", description = "Crea una nueva cuenta de usuario")
     @ApiResponses(value = {
@@ -94,15 +95,16 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Error: El correo ya está en uso");
         }
 
-        // Se crea un nuevo usuario:
         Usuario newUsuario = new Usuario();
         newUsuario.setNombre(createDTO.getNombre());
         newUsuario.setCorreo(createDTO.getCorreo());
         newUsuario.setContrasena(encoder.encode(createDTO.getContrasena()));
         newUsuario.setFechaCreacion(LocalDateTime.now());
 
-        usuarioRepository.save(newUsuario);
+        Usuario usuarioGuardado = usuarioRepository.save(newUsuario);
+        
+        tipoService.crearTiposPredeterminados(usuarioGuardado.getId());
+
         return ResponseEntity.status(HttpStatus.CREATED).body("¡Usuario registrado con éxito!");
     }
-
 }
