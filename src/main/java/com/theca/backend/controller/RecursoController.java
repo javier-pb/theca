@@ -11,6 +11,7 @@ package com.theca.backend.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -122,28 +123,28 @@ public class RecursoController {
 			usuario.setId(dto.getUsuarioId());
 			recurso.setUsuario(usuario);
 		}
-		if (dto.getTiposIds() != null) {
+		if (dto.getTiposIds() != null && !dto.getTiposIds().isEmpty()) {
 			List<Tipo> tipos = dto.getTiposIds().stream().map(id -> {
 				Tipo t = new Tipo(); t.setId(id); return t;
-			}).toList();
+			}).collect(Collectors.toList());
 			recurso.setTipos(tipos);
 		}
-		if (dto.getEtiquetasIds() != null) {
+		if (dto.getEtiquetasIds() != null && !dto.getEtiquetasIds().isEmpty()) {
 			List<Etiqueta> etiquetas = dto.getEtiquetasIds().stream().map(id -> {
 				Etiqueta e = new Etiqueta(); e.setId(id); return e;
-			}).toList();
+			}).collect(Collectors.toList());
 			recurso.setEtiquetas(etiquetas);
 		}
-		if (dto.getCategoriasIds() != null) {
+		if (dto.getCategoriasIds() != null && !dto.getCategoriasIds().isEmpty()) {
 			List<Categoria> categorias = dto.getCategoriasIds().stream().map(id -> {
 				Categoria c = new Categoria(); c.setId(id); return c;
-			}).toList();
+			}).collect(Collectors.toList());
 			recurso.setCategorias(categorias);
 		}
-		if (dto.getAutoresIds() != null) {
+		if (dto.getAutoresIds() != null && !dto.getAutoresIds().isEmpty()) {
 			List<Autor> autores = dto.getAutoresIds().stream().map(id -> {
 				Autor a = new Autor(); a.setId(id); return a;
-			}).toList();
+			}).collect(Collectors.toList());
 			recurso.setAutores(autores);
 		}
 
@@ -180,7 +181,6 @@ public class RecursoController {
 	public ResponseEntity<Recurso> update(@PathVariable String id,
 										  @Valid @RequestBody UpdateRecursoDTO recursoActualizado) {
 		return recursoRepository.findById(id).map(recursoExistente -> {
-			// Sólo se actualizan los campos que vienen en la petición:
 			if (recursoActualizado.getTitulo() != null) {
 				recursoExistente.setTitulo(recursoActualizado.getTitulo());
 			}
@@ -198,6 +198,46 @@ public class RecursoController {
 			}
 			if (recursoActualizado.getVersion() != null) {
 				recursoExistente.setVersion(recursoActualizado.getVersion());
+			}
+
+			if (recursoActualizado.getTiposIds() != null) {
+				List<Tipo> tipos = recursoActualizado.getTiposIds().stream()
+					.map(tipoId -> {
+						Tipo tipo = new Tipo();
+						tipo.setId(tipoId);
+						return tipo;
+					}).collect(Collectors.toList());
+				recursoExistente.setTipos(tipos);
+			}
+			
+			if (recursoActualizado.getAutoresIds() != null) {
+				List<Autor> autores = recursoActualizado.getAutoresIds().stream()
+					.map(autorId -> {
+						Autor autor = new Autor();
+						autor.setId(autorId);
+						return autor;
+					}).collect(Collectors.toList());
+				recursoExistente.setAutores(autores);
+			}
+			
+			if (recursoActualizado.getCategoriasIds() != null) {
+				List<Categoria> categorias = recursoActualizado.getCategoriasIds().stream()
+					.map(categoriaId -> {
+						Categoria categoria = new Categoria();
+						categoria.setId(categoriaId);
+						return categoria;
+					}).collect(Collectors.toList());
+				recursoExistente.setCategorias(categorias);
+			}
+			
+			if (recursoActualizado.getEtiquetasIds() != null) {
+				List<Etiqueta> etiquetas = recursoActualizado.getEtiquetasIds().stream()
+					.map(etiquetaId -> {
+						Etiqueta etiqueta = new Etiqueta();
+						etiqueta.setId(etiquetaId);
+						return etiqueta;
+					}).collect(Collectors.toList());
+				recursoExistente.setEtiquetas(etiquetas);
 			}
 
 			recursoExistente.setFechaModificacion(LocalDateTime.now());
