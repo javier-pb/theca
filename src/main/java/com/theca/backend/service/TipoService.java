@@ -39,7 +39,7 @@ public class TipoService {
         for (TipoPredeterminado tipoPred : TIPOS_PREDETERMINADOS) {
             Tipo tipo = new Tipo();
             tipo.setNombre(tipoPred.nombre);
-            tipo.setImagen(null); // La imagen se cargará desde el frontend o assets
+            tipo.setImagen(null);
             tipo.setUsuarioId(usuarioId);
             tipo.setFechaModificacion(LocalDateTime.now());
             tipo.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
