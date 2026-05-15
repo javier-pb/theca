@@ -17,6 +17,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -68,11 +70,14 @@ class AuthControllerTest {
         loginRequest.setPassword("123456");
         
         UserDetailsImpl userDetails = new UserDetailsImpl("1", "Javier", "javier@email.com", "hash123");
+        Usuario usuario = new Usuario();
+        usuario.setId("userObjectId123");
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(userDetails);
-        when(jwtUtils.generateJwtToken(authentication)).thenReturn("Token JWT falso");
+        when(usuarioRepository.findByNombre("Javier")).thenReturn(Optional.of(usuario));
+        when(jwtUtils.generateJwtTokenWithUserId(authentication, "userObjectId123")).thenReturn("Token JWT falso");
 
         ResponseEntity<?> response = authController.authenticateUser(loginRequest);
 

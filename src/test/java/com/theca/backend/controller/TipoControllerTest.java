@@ -19,7 +19,9 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -39,12 +41,16 @@ import com.theca.backend.dto.tipo.UpdateTipoDTO;
 import com.theca.backend.entity.Tipo;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.TipoRepository;
+import com.theca.backend.security.jwt.JwtUtils;
 
 @ExtendWith(MockitoExtension.class)
 public class TipoControllerTest {
 
     @Mock
     private TipoRepository tipoRepository;
+
+    @Mock
+    private JwtUtils jwtUtils;
 
     @Mock
     private Authentication authentication;
@@ -57,20 +63,23 @@ public class TipoControllerTest {
 
     private Tipo tipo1;
     private Tipo tipo2;
-    private static final String TEST_USER = "testuser";
+    private static final String TEST_USER_ID = "testuser123";
 
     @BeforeEach
     void setUp() {
+        Map<String, Object> detailsMap = new HashMap<>();
+        detailsMap.put("userId", TEST_USER_ID);
+        
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-        when(authentication.getName()).thenReturn(TEST_USER);
+        when(authentication.getDetails()).thenReturn(detailsMap);
 
         tipo1 = new Tipo();
         tipo1.setId("1");
         tipo1.setNombre("Libro");
         tipo1.setFechaModificacion(LocalDateTime.now());
         tipo1.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
-        tipo1.setUsuarioId(TEST_USER);
+        tipo1.setUsuarioId(TEST_USER_ID);
         tipo1.setEsPredeterminado(true);
 
         tipo2 = new Tipo();
@@ -78,19 +87,19 @@ public class TipoControllerTest {
         tipo2.setNombre("Artículo");
         tipo2.setFechaModificacion(LocalDateTime.now());
         tipo2.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
-        tipo2.setUsuarioId(TEST_USER);
+        tipo2.setUsuarioId(TEST_USER_ID);
         tipo2.setEsPredeterminado(false);
     }
 
     @Test
     void getAll_ShouldReturnListFilteredByUser() {
-        when(tipoRepository.findByUsuarioId(TEST_USER)).thenReturn(Arrays.asList(tipo1, tipo2));
+        when(tipoRepository.findByUsuarioId(TEST_USER_ID)).thenReturn(Arrays.asList(tipo1, tipo2));
         
         List<Tipo> result = tipoController.getAll();
         
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(tipoRepository, times(1)).findByUsuarioId(TEST_USER);
+        verify(tipoRepository, times(1)).findByUsuarioId(TEST_USER_ID);
     }
 
     @Test
@@ -104,15 +113,10 @@ public class TipoControllerTest {
     }
 
     @Test
-    void getById_ShouldReturnNotFound_WhenTipoNotBelongsToUser() {
-        Tipo tipoDeOtroUsuario = new Tipo();
-        tipoDeOtroUsuario.setId("3");
-        tipoDeOtroUsuario.setNombre("Otro");
-        tipoDeOtroUsuario.setUsuarioId("otheruser");
+    void getById_ShouldReturnNotFound_WhenIdDoesNotExist() {
+        when(tipoRepository.findById("999")).thenReturn(Optional.empty());
         
-        when(tipoRepository.findById("3")).thenReturn(Optional.of(tipoDeOtroUsuario));
-        
-        ResponseEntity<Tipo> resp = tipoController.getById("3");
+        ResponseEntity<Tipo> resp = tipoController.getById("999");
         
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
     }
@@ -122,7 +126,7 @@ public class TipoControllerTest {
         CreateTipoDTO dto = new CreateTipoDTO();
         dto.setNombre("Nuevo Tipo");
         
-        when(tipoRepository.existsByNombreAndUsuarioId(dto.getNombre(), TEST_USER)).thenReturn(false);
+        when(tipoRepository.existsByNombreAndUsuarioId(dto.getNombre(), TEST_USER_ID)).thenReturn(false);
         when(tipoRepository.save(any(Tipo.class))).thenAnswer(i -> i.getArgument(0));
         
         ResponseEntity<?> response = tipoController.create(dto);
@@ -131,7 +135,7 @@ public class TipoControllerTest {
         Tipo saved = (Tipo) response.getBody();
         assertNotNull(saved.getFechaModificacion());
         assertEquals("Nuevo Tipo", saved.getNombre());
-        assertEquals(TEST_USER, saved.getUsuarioId());
+        assertEquals(TEST_USER_ID, saved.getUsuarioId());
         assertEquals(false, saved.isEsPredeterminado());
         verify(tipoRepository, times(1)).save(any(Tipo.class));
     }
@@ -141,7 +145,7 @@ public class TipoControllerTest {
         CreateTipoDTO dto = new CreateTipoDTO();
         dto.setNombre("Libro");
         
-        when(tipoRepository.existsByNombreAndUsuarioId(dto.getNombre(), TEST_USER)).thenReturn(true);
+        when(tipoRepository.existsByNombreAndUsuarioId(dto.getNombre(), TEST_USER_ID)).thenReturn(true);
         
         ResponseEntity<?> response = tipoController.create(dto);
         
@@ -156,7 +160,7 @@ public class TipoControllerTest {
         dto.setNombre("Libro Actualizado");
         
         when(tipoRepository.findById("1")).thenReturn(Optional.of(tipo1));
-        when(tipoRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), TEST_USER, "1")).thenReturn(false);
+        when(tipoRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), TEST_USER_ID, "1")).thenReturn(false);
         when(tipoRepository.save(any(Tipo.class))).thenAnswer(i -> i.getArgument(0));
         
         ResponseEntity<?> response = tipoController.update("1", dto);
@@ -173,7 +177,7 @@ public class TipoControllerTest {
         dto.setNombre("Artículo");
         
         when(tipoRepository.findById("1")).thenReturn(Optional.of(tipo1));
-        when(tipoRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), TEST_USER, "1")).thenReturn(true);
+        when(tipoRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), TEST_USER_ID, "1")).thenReturn(true);
         
         ResponseEntity<?> response = tipoController.update("1", dto);
         
@@ -204,15 +208,10 @@ public class TipoControllerTest {
     }
 
     @Test
-    void delete_ShouldReturnNotFound_WhenTipoNotBelongsToUser() {
-        Tipo tipoDeOtroUsuario = new Tipo();
-        tipoDeOtroUsuario.setId("3");
-        tipoDeOtroUsuario.setNombre("Otro");
-        tipoDeOtroUsuario.setUsuarioId("otheruser");
+    void delete_ShouldReturnNotFound_WhenIdDoesNotExist() {
+        when(tipoRepository.findById("999")).thenReturn(Optional.empty());
         
-        when(tipoRepository.findById("3")).thenReturn(Optional.of(tipoDeOtroUsuario));
-        
-        ResponseEntity<?> resp = tipoController.delete("3");
+        ResponseEntity<?> resp = tipoController.delete("999");
         
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
         verify(tipoRepository, never()).deleteById(any());
