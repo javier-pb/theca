@@ -2,7 +2,7 @@
  * Descripción: DTO para la búsqueda avanzada de recursos.
  * 
  * @author Javier Pérez Báez
- * @version 1.0
+ * @version 1.1
  * @date 22 abr 2026
  */
 
@@ -20,6 +20,7 @@ public class RecursoSearchDTO {
     private String autor;
     private String categoria;
     private String etiqueta;
+    
     // BÚSQUEDA AVANZADA:
     private List<String> autores;
     private String tipo;
@@ -30,109 +31,118 @@ public class RecursoSearchDTO {
     private List<String> etiquetas;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaModificacion;
+    private String usuarioId;
     
     public String getTitulo() {
-    	return titulo;
+        return titulo;
     }
     
     public void setTitulo(String titulo) {
-    	this.titulo = titulo;
+        this.titulo = titulo;
     }
     
     public String getAutor() {
-    	return autor;
+        return autor;
     }
     
     public void setAutor(String autor) {
-    	this.autor = autor;
+        this.autor = autor;
     }
     
     public String getCategoria() {
-    	return categoria;
+        return categoria;
     }
     
     public void setCategoria(String categoria) {
-    	this.categoria = categoria;
+        this.categoria = categoria;
     }
     
     public String getEtiqueta() {
-    	return etiqueta;
+        return etiqueta;
     }
     
     public void setEtiqueta(String etiqueta) {
-    	this.etiqueta = etiqueta;
+        this.etiqueta = etiqueta;
     }
     
     public List<String> getAutores() {
-    	return autores;
+        return autores;
     }
     
     public void setAutores(List<String> autores) {
-    	this.autores = autores;
+        this.autores = autores;
     }
     
     public String getTipo() {
-    	return tipo;
+        return tipo;
     }
     
     public void setTipo(String tipo) {
-    	this.tipo = tipo;
+        this.tipo = tipo;
     }
     
     public Double getVersion() {
-    	return version;
+        return version;
     }
     
     public void setVersion(Double version) {
-    	this.version = version;
+        this.version = version;
     }
     
     public String getDescripcion() {
-    	return descripcion;
+        return descripcion;
     }
     
     public void setDescripcion(String descripcion) {
-    	this.descripcion = descripcion;
+        this.descripcion = descripcion;
     }
     
     public EstadoSincronizacion getEstadoSincronizacion() {
-    	return estadoSincronizacion;
+        return estadoSincronizacion;
     }
     
     public void setEstadoSincronizacion(EstadoSincronizacion estadoSincronizacion) {
-    	this.estadoSincronizacion = estadoSincronizacion;
+        this.estadoSincronizacion = estadoSincronizacion;
     }
     
-    
     public List<String> getCategorias() {
-    	return categorias;
+        return categorias;
     }
     
     public void setCategorias(List<String> categorias) {
-    	this.categorias = categorias;
+        this.categorias = categorias;
     }
     
     public List<String> getEtiquetas() {
-    	return etiquetas;
+        return etiquetas;
     }
+    
     public void setEtiquetas(List<String> etiquetas) {
-    	this.etiquetas = etiquetas;
+        this.etiquetas = etiquetas;
     }
     
     public LocalDateTime getFechaCreacion() {
-    	return fechaCreacion;
+        return fechaCreacion;
     }
     
     public void setFechaCreacion(LocalDateTime fechaCreacion) {
-    	this.fechaCreacion = fechaCreacion;
+        this.fechaCreacion = fechaCreacion;
     }
     
     public LocalDateTime getFechaModificacion() {
-    	return fechaModificacion;
+        return fechaModificacion;
     }
     
     public void setFechaModificacion(LocalDateTime fechaModificacion) {
-    	this.fechaModificacion = fechaModificacion;
+        this.fechaModificacion = fechaModificacion;
     }
-
+    
+    public String getUsuarioId() {
+        return usuarioId;
+    }
+    
+    public void setUsuarioId(String usuarioId) {
+        this.usuarioId = usuarioId;
+    }
+    
 }
