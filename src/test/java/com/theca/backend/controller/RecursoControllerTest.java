@@ -379,9 +379,27 @@ public class RecursoControllerTest {
         verify(recursoRepository, never()).deleteById(anyString());
     }
 	
-	// Test del endpoint POST /buscar (búsqueda avanzada de recursos):
+    // Tests del endpoint POST /buscar (búsqueda avanzada de recursos):
     @Test
     void search_ShouldReturnFilteredRecursos() {
+        RecursoSearchDTO searchDTO = new RecursoSearchDTO();
+        searchDTO.setTitulo("Título 1");
+        searchDTO.setUsuarioId("user1");
+        
+        List<Recurso> expectedRecursos = Arrays.asList(recurso1);
+        
+        when(recursoSearchService.search(any(RecursoSearchDTO.class))).thenReturn(expectedRecursos);
+        
+        List<Recurso> actualRecursos = recursoController.search(searchDTO, "user1");
+        
+        assertNotNull(actualRecursos);
+        assertEquals(1, actualRecursos.size());
+        assertEquals("Título 1", actualRecursos.get(0).getTitulo());
+        verify(recursoSearchService, times(1)).search(any(RecursoSearchDTO.class));
+    }
+
+    @Test
+    void search_ShouldWorkWithoutUsuarioId() {
         RecursoSearchDTO searchDTO = new RecursoSearchDTO();
         searchDTO.setTitulo("Título 1");
         
@@ -389,11 +407,29 @@ public class RecursoControllerTest {
         
         when(recursoSearchService.search(any(RecursoSearchDTO.class))).thenReturn(expectedRecursos);
         
-        List<Recurso> actualRecursos = recursoController.search(searchDTO);
+        List<Recurso> actualRecursos = recursoController.search(searchDTO, null);
         
         assertNotNull(actualRecursos);
         assertEquals(1, actualRecursos.size());
-        assertEquals("Título 1", actualRecursos.get(0).getTitulo());
+        verify(recursoSearchService, times(1)).search(any(RecursoSearchDTO.class));
+    }
+
+    @Test
+    void search_ShouldHandleMultipleFilters() {
+        RecursoSearchDTO searchDTO = new RecursoSearchDTO();
+        searchDTO.setTitulo("Título");
+        searchDTO.setVersion(1.0);
+        searchDTO.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
+        searchDTO.setUsuarioId("user1");
+        
+        List<Recurso> expectedRecursos = Arrays.asList(recurso1);
+        
+        when(recursoSearchService.search(any(RecursoSearchDTO.class))).thenReturn(expectedRecursos);
+        
+        List<Recurso> actualRecursos = recursoController.search(searchDTO, "user1");
+        
+        assertNotNull(actualRecursos);
+        assertEquals(1, actualRecursos.size());
         verify(recursoSearchService, times(1)).search(any(RecursoSearchDTO.class));
     }
     

@@ -265,11 +265,15 @@ public class RecursoController {
 	@PostMapping("/buscar")
 	@Operation(summary = "Búsqueda avanzada de recursos", description = "Realiza una búsqueda avanzada de recursos según los criterios proporcionados")
 	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "Búsqueda realizada exitosamente"),
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida"),
-		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+	    @ApiResponse(responseCode = "200", description = "Búsqueda realizada exitosamente"),
+	    @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+	    @ApiResponse(responseCode = "500", description = "Error interno del servidor")
 	})
-	public List<Recurso> search(@RequestBody RecursoSearchDTO searchDTO) {
+	public List<Recurso> search(@RequestBody RecursoSearchDTO searchDTO,
+	                            @RequestParam(required = false) String usuarioId) {
+	    if (usuarioId != null && !usuarioId.isEmpty()) {
+	        searchDTO.setUsuarioId(usuarioId);
+	    }
 	    return recursoSearchService.search(searchDTO);
 	}
 	
