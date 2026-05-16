@@ -34,4 +34,8 @@ public interface RecursoRepository extends MongoRepository<Recurso, String> {
     @Query("{ 'id': { $in: ?0 } }")
     void desasociarAutor(String autorId, List<String> recursosIds);
     
+    // Buscar recursos que tengan un autor específico por su ID:
+    @Query("{ 'autores.id': ?0 }")
+    List<Recurso> findByAutoresId(String autorId);
+    
 }

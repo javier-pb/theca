@@ -10,8 +10,12 @@
 package com.theca.backend.controller;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -30,6 +34,7 @@ import com.theca.backend.dto.autor.AsociarRecursosDTO;
 import com.theca.backend.dto.autor.CreateAutorDTO;
 import com.theca.backend.dto.autor.UpdateAutorDTO;
 import com.theca.backend.entity.Autor;
+import com.theca.backend.entity.Recurso;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.AutorRepository;
 import com.theca.backend.repository.RecursoRepository;
@@ -46,23 +51,38 @@ import jakarta.validation.Valid;
 public class AutorController {
 
     private final AutorRepository autorRepository;
-    private final RecursoRepository recursoRepository;
+    
+    @Autowired
+    private RecursoRepository recursoRepository;
 
-    public AutorController(AutorRepository autorRepository, RecursoRepository recursoRepository) {
+    public AutorController(AutorRepository autorRepository) {
         this.autorRepository = autorRepository;
-        this.recursoRepository = recursoRepository;
+    }
+
+    // Método auxiliar para obtener el userId del token:
+    private String getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Object details = auth.getDetails();
+        if (details instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> detailsMap = (Map<String, Object>) details;
+            return (String) detailsMap.get("userId");
+        }
+        return null;
     }
 
     @GetMapping
-    @Operation(summary = "Obtener todos los autores del usuario autenticado", description = "Devuelve una lista de todos los autores del usuario")
+    @Operation(summary = "Obtener todos los autores", description = "Devuelve una lista de todos los autores")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Lista de autores obtenida exitosamente"),
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public List<Autor> getAll() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        return autorRepository.findByUsuarioId(username);
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return List.of();
+        }
+        return autorRepository.findByUsuarioId(userId);
     }
 
     @GetMapping("/{id}")
@@ -73,12 +93,36 @@ public class AutorController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<Autor> getById(@PathVariable String id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.notFound().build();
+        }
         
         return autorRepository.findById(id)
-                .filter(autor -> autor.getUsuarioId().equals(username))
+                .filter(autor -> autor.getUsuarioId().equals(userId))
                 .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/recursos")
+    @Operation(summary = "Obtener recursos asociados a un autor", description = "Devuelve una lista de recursos asociados al autor")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de recursos obtenida exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Autor no encontrado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public ResponseEntity<List<Recurso>> getRecursosAsociados(@PathVariable String id) {
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        return autorRepository.findById(id)
+                .filter(autor -> autor.getUsuarioId().equals(userId))
+                .map(autor -> {
+                    List<Recurso> recursos = recursoRepository.findByAutoresId(id);
+                    return ResponseEntity.ok(recursos);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -91,16 +135,19 @@ public class AutorController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<?> create(@Valid @RequestBody CreateAutorDTO dto) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().body("Usuario no autenticado");
+        }
         
-        if (autorRepository.existsByNombreAndUsuarioId(dto.getNombre(), username)) {
-            return ResponseEntity.badRequest().body("Ya existe un autor con el nombre '" + dto.getNombre() + "'");
+        if (autorRepository.existsByNombreAndUsuarioId(dto.getNombre(), userId)) {
+            return ResponseEntity.badRequest()
+                .body("Ya existe un autor con el nombre '" + dto.getNombre() + "'");
         }
         
         Autor autor = new Autor();
         autor.setNombre(dto.getNombre());
-        autor.setUsuarioId(username);
+        autor.setUsuarioId(userId);
         autor.setFechaModificacion(LocalDateTime.now());
         autor.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
         
@@ -116,15 +163,18 @@ public class AutorController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody UpdateAutorDTO dto) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().body("Usuario no autenticado");
+        }
         
         return autorRepository.findById(id)
-                .filter(autor -> autor.getUsuarioId().equals(username))
+                .filter(autor -> autor.getUsuarioId().equals(userId))
                 .map(autorExistente -> {
                     if (dto.getNombre() != null && !dto.getNombre().equals(autorExistente.getNombre())) {
-                        if (autorRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), username, id)) {
-                            return ResponseEntity.badRequest().body("Ya existe un autor con el nombre '" + dto.getNombre() + "'");
+                        if (autorRepository.existsByNombreAndUsuarioIdAndIdNot(dto.getNombre(), userId, id)) {
+                            return ResponseEntity.badRequest()
+                                .body("Ya existe un autor con el nombre '" + dto.getNombre() + "'");
                         }
                         autorExistente.setNombre(dto.getNombre());
                     }
@@ -132,6 +182,7 @@ public class AutorController {
                     if (dto.getEstadoSincronizacion() != null) {
                         autorExistente.setEstadoSincronizacion(dto.getEstadoSincronizacion());
                     }
+                    
                     autorExistente.setFechaModificacion(LocalDateTime.now());
                     return ResponseEntity.ok(autorRepository.save(autorExistente));
                 })
@@ -145,76 +196,102 @@ public class AutorController {
         @ApiResponse(responseCode = "404", description = "Autor no encontrado"),
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+    public ResponseEntity<?> delete(@PathVariable String id) {
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().body("Usuario no autenticado");
+        }
         
         return autorRepository.findById(id)
-                .filter(autor -> autor.getUsuarioId().equals(username))
+                .filter(autor -> autor.getUsuarioId().equals(userId))
                 .map(autor -> {
+                    List<Recurso> recursos = recursoRepository.findByAutoresId(id);
+                    for (Recurso recurso : recursos) {
+                        if (recurso.getAutores() != null) {
+                            recurso.setAutores(recurso.getAutores().stream()
+                                .filter(a -> !a.getId().equals(id))
+                                .collect(Collectors.toList()));
+                            recurso.setFechaModificacion(LocalDateTime.now());
+                            recursoRepository.save(recurso);
+                        }
+                    }
                     autorRepository.deleteById(id);
-                    return ResponseEntity.noContent().<Void>build();
+                    return ResponseEntity.noContent().build();
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
-    
-    @GetMapping("/{id}/recursos")
-    @Operation(summary = "Obtener recursos asociados a un autor", description = "Devuelve una lista de recursos que tienen este autor")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de recursos obtenida exitosamente"),
-        @ApiResponse(responseCode = "404", description = "Autor no encontrado"),
-        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
-    })
-    public ResponseEntity<?> getRecursosAsociados(@PathVariable String id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        
-        return autorRepository.findById(id)
-                .filter(autor -> autor.getUsuarioId().equals(username))
-                .map(autor -> {
-                    return ResponseEntity.ok().body(java.util.Collections.emptyList());
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-    
+
     @PostMapping("/{id}/recursos")
-    @Operation(summary = "Asociar recursos a un autor", description = "Asocia una lista de recursos a un autor")
+    @Operation(summary = "Asociar recursos a un autor", description = "Asocia una lista de recursos al autor especificado")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Recursos asociados exitosamente"),
         @ApiResponse(responseCode = "404", description = "Autor no encontrado"),
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<?> asociarRecursos(@PathVariable String id, @RequestBody AsociarRecursosDTO dto) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().body("Usuario no autenticado");
+        }
         
         return autorRepository.findById(id)
-                .filter(autor -> autor.getUsuarioId().equals(username))
+                .filter(autor -> autor.getUsuarioId().equals(userId))
                 .map(autor -> {
-                    recursoRepository.asociarAutor(id, dto.getRecursosIds());
-                    return ResponseEntity.ok().body("Recursos asociados exitosamente");
+                    List<String> recursosIds = dto.getRecursosIds();
+                    
+                    for (String recursoId : recursosIds) {
+                        recursoRepository.findById(recursoId).ifPresent(recurso -> {
+                            if (recurso.getAutores() == null) {
+                                recurso.setAutores(new ArrayList<>());
+                            }
+                            boolean yaExiste = recurso.getAutores().stream()
+                                .anyMatch(a -> a.getId().equals(id));
+                            if (!yaExiste) {
+                                recurso.getAutores().add(autor);
+                                recurso.setFechaModificacion(LocalDateTime.now());
+                                recursoRepository.save(recurso);
+                            }
+                        });
+                    }
+                    
+                    return ResponseEntity.ok().build();
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}/recursos")
-    @Operation(summary = "Desasociar recursos de un autor", description = "Desasocia recursos de un autor")
+    @Operation(summary = "Desasociar recursos de un autor", description = "Desasocia una lista de recursos del autor especificado")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Recursos desasociados exitosamente"),
         @ApiResponse(responseCode = "404", description = "Autor no encontrado"),
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<?> desasociarRecursos(@PathVariable String id, @RequestBody AsociarRecursosDTO dto) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().body("Usuario no autenticado");
+        }
         
         return autorRepository.findById(id)
-                .filter(autor -> autor.getUsuarioId().equals(username))
+                .filter(autor -> autor.getUsuarioId().equals(userId))
                 .map(autor -> {
-                    recursoRepository.desasociarAutor(id, dto.getRecursosIds());
-                    return ResponseEntity.ok().body("Recursos desasociados exitosamente");
+                    List<String> recursosIds = dto.getRecursosIds();
+                    
+                    for (String recursoId : recursosIds) {
+                        recursoRepository.findById(recursoId).ifPresent(recurso -> {
+                            if (recurso.getAutores() != null) {
+                                recurso.setAutores(recurso.getAutores().stream()
+                                    .filter(a -> !a.getId().equals(id))
+                                    .collect(Collectors.toList()));
+                                recurso.setFechaModificacion(LocalDateTime.now());
+                                recursoRepository.save(recurso);
+                            }
+                        });
+                    }
+                    
+                    return ResponseEntity.ok().build();
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
-    
+
 }

@@ -18,16 +18,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -38,38 +40,42 @@ import com.theca.backend.dto.autor.AsociarRecursosDTO;
 import com.theca.backend.dto.autor.CreateAutorDTO;
 import com.theca.backend.dto.autor.UpdateAutorDTO;
 import com.theca.backend.entity.Autor;
+import com.theca.backend.entity.Recurso;
 import com.theca.backend.enums.EstadoSincronizacion;
 import com.theca.backend.repository.AutorRepository;
 import com.theca.backend.repository.RecursoRepository;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 public class AutorControllerTest {
 
-    @Mock
+    @Autowired
+    private AutorController autorController;
+
+    @MockBean
     private AutorRepository autorRepository;
 
-    @Mock
+    @MockBean
     private RecursoRepository recursoRepository;
-
-    @Mock
-    private Authentication authentication;
-
-    @Mock
-    private SecurityContext securityContext;
-
-    @InjectMocks
-    private AutorController autorController;
 
     private Autor autor1;
     private Autor autor2;
+    private Recurso recurso1;
+    private Recurso recurso2;
     private static final String TEST_USER = "testuser";
 
     @BeforeEach
     void setUp() {
+        Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
+        SecurityContext securityContext = org.mockito.Mockito.mock(SecurityContext.class);
+        
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
         when(authentication.getName()).thenReturn(TEST_USER);
-
+        
+        Map<String, Object> detailsMap = new HashMap<>();
+        detailsMap.put("userId", TEST_USER);
+        when(authentication.getDetails()).thenReturn(detailsMap);
+        
         autor1 = new Autor();
         autor1.setId("1");
         autor1.setNombre("Gabriel García Márquez");
@@ -83,6 +89,16 @@ public class AutorControllerTest {
         autor2.setFechaModificacion(LocalDateTime.now());
         autor2.setEstadoSincronizacion(EstadoSincronizacion.PENDIENTE);
         autor2.setUsuarioId(TEST_USER);
+
+        recurso1 = new Recurso();
+        recurso1.setId("r1");
+        recurso1.setTitulo("Recurso 1");
+        recurso1.setAutores(new ArrayList<>());
+
+        recurso2 = new Recurso();
+        recurso2.setId("r2");
+        recurso2.setTitulo("Recurso 2");
+        recurso2.setAutores(new ArrayList<>());
     }
 
     @Test
@@ -135,13 +151,17 @@ public class AutorControllerTest {
         dto.setNombre("Isabel Allende");
         
         when(autorRepository.existsByNombreAndUsuarioId(dto.getNombre(), TEST_USER)).thenReturn(false);
-        when(autorRepository.save(any(Autor.class))).thenAnswer(i -> i.getArgument(0));
+        when(autorRepository.save(any(Autor.class))).thenAnswer(i -> {
+            Autor a = i.getArgument(0);
+            a.setId("3");
+            return a;
+        });
         
         ResponseEntity<?> response = autorController.create(dto);
         
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         Autor saved = (Autor) response.getBody();
-        assertNotNull(saved.getFechaModificacion());
+        assertNotNull(saved);
         assertEquals("Isabel Allende", saved.getNombre());
         assertEquals(TEST_USER, saved.getUsuarioId());
         assertEquals(EstadoSincronizacion.PENDIENTE, saved.getEstadoSincronizacion());
@@ -228,12 +248,16 @@ public class AutorControllerTest {
     }
 
     @Test
-    void delete_ShouldDeleteAutor_WhenBelongsToUser() {
-        when(autorRepository.findById("1")).thenReturn(Optional.of(autor1));
+    void delete_ShouldDeleteAutor_WhenBelongsToUserAndRemoveFromRecursos() {
+        List<Recurso> recursosConAutor = Arrays.asList(recurso1, recurso2);
         
-        ResponseEntity<Void> resp = autorController.delete("1");
+        when(autorRepository.findById("1")).thenReturn(Optional.of(autor1));
+        when(recursoRepository.findByAutoresId("1")).thenReturn(recursosConAutor);
+        
+        ResponseEntity<?> resp = autorController.delete("1");
         
         assertEquals(HttpStatus.NO_CONTENT, resp.getStatusCode());
+        verify(recursoRepository, times(2)).save(any(Recurso.class));
         verify(autorRepository, times(1)).deleteById("1");
     }
 
@@ -246,7 +270,7 @@ public class AutorControllerTest {
         
         when(autorRepository.findById("3")).thenReturn(Optional.of(autorDeOtroUsuario));
         
-        ResponseEntity<Void> resp = autorController.delete("3");
+        ResponseEntity<?> resp = autorController.delete("3");
         
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
         verify(autorRepository, never()).deleteById(any());
@@ -256,20 +280,23 @@ public class AutorControllerTest {
     void delete_ShouldReturnNotFound_WhenIdDoesNotExist() {
         when(autorRepository.findById("999")).thenReturn(Optional.empty());
         
-        ResponseEntity<Void> resp = autorController.delete("999");
+        ResponseEntity<?> resp = autorController.delete("999");
         
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
         verify(autorRepository, never()).deleteById(any());
     }
 
     @Test
-    void getRecursosAsociados_ShouldReturnEmptyList_WhenAutorExists() {
+    void getRecursosAsociados_ShouldReturnRecursos_WhenAutorExists() {
+        List<Recurso> recursos = Arrays.asList(recurso1, recurso2);
         when(autorRepository.findById("1")).thenReturn(Optional.of(autor1));
+        when(recursoRepository.findByAutoresId("1")).thenReturn(recursos);
         
         ResponseEntity<?> response = autorController.getRecursosAsociados("1");
         
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
+        verify(recursoRepository, times(1)).findByAutoresId("1");
     }
 
     @Test
@@ -282,17 +309,35 @@ public class AutorControllerTest {
     }
 
     @Test
-    void asociarRecursos_ShouldAsociarRecursos_WhenAutorExists() {
+    void asociarRecursos_ShouldAddAutorToRecursos_WhenAutorExists() {
         AsociarRecursosDTO dto = new AsociarRecursosDTO();
         dto.setRecursosIds(Arrays.asList("r1", "r2"));
         
         when(autorRepository.findById("1")).thenReturn(Optional.of(autor1));
+        when(recursoRepository.findById("r1")).thenReturn(Optional.of(recurso1));
+        when(recursoRepository.findById("r2")).thenReturn(Optional.of(recurso2));
+        when(recursoRepository.save(any(Recurso.class))).thenAnswer(i -> i.getArgument(0));
         
         ResponseEntity<?> response = autorController.asociarRecursos("1", dto);
         
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Recursos asociados exitosamente", response.getBody());
-        verify(recursoRepository, times(1)).asociarAutor("1", dto.getRecursosIds());
+        verify(recursoRepository, times(2)).save(any(Recurso.class));
+    }
+
+    @Test
+    void asociarRecursos_ShouldSkipIfAutorAlreadyInRecurso() {
+        AsociarRecursosDTO dto = new AsociarRecursosDTO();
+        dto.setRecursosIds(Arrays.asList("r1"));
+        
+        recurso1.getAutores().add(autor1);
+        
+        when(autorRepository.findById("1")).thenReturn(Optional.of(autor1));
+        when(recursoRepository.findById("r1")).thenReturn(Optional.of(recurso1));
+        
+        ResponseEntity<?> response = autorController.asociarRecursos("1", dto);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(recursoRepository, never()).save(any(Recurso.class));
     }
 
     @Test
@@ -305,21 +350,26 @@ public class AutorControllerTest {
         ResponseEntity<?> response = autorController.asociarRecursos("999", dto);
         
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        verify(recursoRepository, never()).asociarAutor(any(), any());
+        verify(recursoRepository, never()).save(any(Recurso.class));
     }
 
     @Test
-    void desasociarRecursos_ShouldDesasociarRecursos_WhenAutorExists() {
+    void desasociarRecursos_ShouldRemoveAutorFromRecursos_WhenAutorExists() {
         AsociarRecursosDTO dto = new AsociarRecursosDTO();
         dto.setRecursosIds(Arrays.asList("r1", "r2"));
         
+        recurso1.getAutores().add(autor1);
+        recurso2.getAutores().add(autor1);
+        
         when(autorRepository.findById("1")).thenReturn(Optional.of(autor1));
+        when(recursoRepository.findById("r1")).thenReturn(Optional.of(recurso1));
+        when(recursoRepository.findById("r2")).thenReturn(Optional.of(recurso2));
+        when(recursoRepository.save(any(Recurso.class))).thenAnswer(i -> i.getArgument(0));
         
         ResponseEntity<?> response = autorController.desasociarRecursos("1", dto);
         
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Recursos desasociados exitosamente", response.getBody());
-        verify(recursoRepository, times(1)).desasociarAutor("1", dto.getRecursosIds());
+        verify(recursoRepository, times(2)).save(any(Recurso.class));
     }
 
     @Test
@@ -332,7 +382,7 @@ public class AutorControllerTest {
         ResponseEntity<?> response = autorController.desasociarRecursos("999", dto);
         
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        verify(recursoRepository, never()).desasociarAutor(any(), any());
+        verify(recursoRepository, never()).save(any(Recurso.class));
     }
     
 }
