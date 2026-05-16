@@ -173,76 +173,76 @@ public class RecursoController {
 	@PutMapping("/{id}")
 	@Operation(summary = "Actualizar recurso existente", description = "Actualiza un recurso existente con los datos proporcionados")
 	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "Recurso actualizado exitosamente"),
-		@ApiResponse(responseCode = "400", description = "Solicitud inválida"),
-		@ApiResponse(responseCode = "404", description = "Recurso no encontrado"),
-		@ApiResponse(responseCode = "500", description = "Error interno del servidor")
+	    @ApiResponse(responseCode = "200", description = "Recurso actualizado exitosamente"),
+	    @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+	    @ApiResponse(responseCode = "404", description = "Recurso no encontrado"),
+	    @ApiResponse(responseCode = "500", description = "Error interno del servidor")
 	})
 	public ResponseEntity<Recurso> update(@PathVariable String id,
-										  @Valid @RequestBody UpdateRecursoDTO recursoActualizado) {
-		return recursoRepository.findById(id).map(recursoExistente -> {
-			if (recursoActualizado.getTitulo() != null) {
-				recursoExistente.setTitulo(recursoActualizado.getTitulo());
-			}
-			if (recursoActualizado.getDescripcion() != null) {
-				recursoExistente.setDescripcion(recursoActualizado.getDescripcion());
-			}
-			if (recursoActualizado.getEnlace() != null) {
-				recursoExistente.setEnlace(recursoActualizado.getEnlace());
-			}
-			if (recursoActualizado.getPortada() != null) {
-				recursoExistente.setPortada(recursoActualizado.getPortada());
-			}
-			if (recursoActualizado.getEstadoSincronizacion() != null) {
-				recursoExistente.setEstadoSincronizacion(recursoActualizado.getEstadoSincronizacion());
-			}
-			if (recursoActualizado.getVersion() != null) {
-				recursoExistente.setVersion(recursoActualizado.getVersion());
-			}
+	                                      @Valid @RequestBody UpdateRecursoDTO recursoActualizado) {
+	    return recursoRepository.findById(id).map(recursoExistente -> {
+	        if (recursoActualizado.getTitulo() != null) {
+	            recursoExistente.setTitulo(recursoActualizado.getTitulo());
+	        }
+	        if (recursoActualizado.getDescripcion() != null) {
+	            recursoExistente.setDescripcion(recursoActualizado.getDescripcion());
+	        }
+	        if (recursoActualizado.getEnlace() != null) {
+	            recursoExistente.setEnlace(recursoActualizado.getEnlace());
+	        }
+	        if (recursoActualizado.getPortada() != null) {
+	            recursoExistente.setPortada(recursoActualizado.getPortada());
+	        }
+	        if (recursoActualizado.getEstadoSincronizacion() != null) {
+	            recursoExistente.setEstadoSincronizacion(recursoActualizado.getEstadoSincronizacion());
+	        }
+	        if (recursoActualizado.getVersion() != null) {
+	            recursoExistente.setVersion(recursoActualizado.getVersion());
+	        }
 
-			if (recursoActualizado.getTiposIds() != null) {
-				List<Tipo> tipos = recursoActualizado.getTiposIds().stream()
-					.map(tipoId -> {
-						Tipo tipo = new Tipo();
-						tipo.setId(tipoId);
-						return tipo;
-					}).collect(Collectors.toList());
-				recursoExistente.setTipos(tipos);
-			}
-			
-			if (recursoActualizado.getAutoresIds() != null) {
-				List<Autor> autores = recursoActualizado.getAutoresIds().stream()
-					.map(autorId -> {
-						Autor autor = new Autor();
-						autor.setId(autorId);
-						return autor;
-					}).collect(Collectors.toList());
-				recursoExistente.setAutores(autores);
-			}
-			
-			if (recursoActualizado.getCategoriasIds() != null) {
-				List<Categoria> categorias = recursoActualizado.getCategoriasIds().stream()
-					.map(categoriaId -> {
-						Categoria categoria = new Categoria();
-						categoria.setId(categoriaId);
-						return categoria;
-					}).collect(Collectors.toList());
-				recursoExistente.setCategorias(categorias);
-			}
-			
-			if (recursoActualizado.getEtiquetasIds() != null) {
-				List<Etiqueta> etiquetas = recursoActualizado.getEtiquetasIds().stream()
-					.map(etiquetaId -> {
-						Etiqueta etiqueta = new Etiqueta();
-						etiqueta.setId(etiquetaId);
-						return etiqueta;
-					}).collect(Collectors.toList());
-				recursoExistente.setEtiquetas(etiquetas);
-			}
+	        if (recursoActualizado.getTiposIds() != null) {
+	            List<Tipo> tipos = recursoActualizado.getTiposIds().stream()
+	                .map(tipoId -> {
+	                    Tipo tipo = new Tipo();
+	                    tipo.setId(tipoId);
+	                    return tipo;
+	                }).collect(Collectors.toList());
+	            recursoExistente.setTipos(tipos);
+	        }
+	        
+	        if (recursoActualizado.getAutoresIds() != null) {
+	            List<Autor> autores = recursoActualizado.getAutoresIds().stream()
+	                .map(autorId -> {
+	                    Autor autor = new Autor();
+	                    autor.setId(autorId);
+	                    return autor;
+	                }).collect(Collectors.toList());
+	            recursoExistente.setAutores(autores);
+	        }
+	        
+	        if (recursoActualizado.getCategoriasIds() != null) {
+	            List<Categoria> categorias = recursoActualizado.getCategoriasIds().stream()
+	                .map(categoriaId -> {
+	                    Categoria categoria = new Categoria();
+	                    categoria.setId(categoriaId);
+	                    return categoria;
+	                }).collect(Collectors.toList());
+	            recursoExistente.setCategorias(categorias);
+	        }
+	        
+	        if (recursoActualizado.getEtiquetasIds() != null) {
+	            List<Etiqueta> etiquetas = recursoActualizado.getEtiquetasIds().stream()
+	                .map(etiquetaId -> {
+	                    Etiqueta etiqueta = new Etiqueta();
+	                    etiqueta.setId(etiquetaId);
+	                    return etiqueta;
+	                }).collect(Collectors.toList());
+	            recursoExistente.setEtiquetas(etiquetas);
+	        }
 
-			recursoExistente.setFechaModificacion(LocalDateTime.now());
-			return ResponseEntity.ok(recursoRepository.save(recursoExistente));
-		}).orElse(ResponseEntity.notFound().build());
+	        recursoExistente.setFechaModificacion(LocalDateTime.now());
+	        return ResponseEntity.ok(recursoRepository.save(recursoExistente));
+	    }).orElse(ResponseEntity.notFound().build());
 	}
 	    
 	// Endpoint DELETE /api/recursos/{id} (eliminar un recurso):
