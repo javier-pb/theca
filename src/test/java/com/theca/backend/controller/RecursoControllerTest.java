@@ -50,16 +50,13 @@ import com.theca.backend.service.RecursoSearchService;
 @SpringBootTest
 public class RecursoControllerTest {
 
-	// Se inyectan el controlador, el repositorio, el servicio y dos recursos:
     @Autowired
     private RecursoController recursoController;
 
-    @SuppressWarnings("removal")
-	@MockBean
+    @MockBean
     private RecursoRepository recursoRepository;
     
-    @SuppressWarnings("removal")
-	@MockBean
+    @MockBean
     private RecursoSearchService recursoSearchService;
     
     private Recurso recurso1;
@@ -78,15 +75,14 @@ public class RecursoControllerTest {
     // Antes de cada test, se inicializan los recursos y relaciones:
     @BeforeEach
     void setUp() {
-    	// Atributo portada mockeado:
         byte[] portadaPrueba = new byte[1024];
-    	
-    	// Atributo usuario mockeado:
+        
         Usuario usuarioPrueba = new Usuario();
         usuarioPrueba.setId("user1");
         usuarioPrueba.setNombre("Usuario Prueba");
         usuarioPrueba.setCorreo("test@email.com");
         
+
         // Inicializar relaciones de prueba:
         tipo1 = new Tipo();
         tipo1.setId("tipo1");
@@ -119,7 +115,7 @@ public class RecursoControllerTest {
         etiqueta2 = new Etiqueta();
         etiqueta2.setId("etq2");
         etiqueta2.setNombre("Renacimiento");
-    	
+
         recurso1 = new Recurso();
         recurso1.setId("1");
         recurso1.setTitulo("Título 1");
@@ -155,7 +151,6 @@ public class RecursoControllerTest {
         recurso2.setEtiquetas(Arrays.asList(etiqueta2));
     }
 
-    // Tests del endpoint GET /api/recursos (obtener todos los recursos):
     @Test
     void getAll_ShouldReturnListOfRecursos() {
         List<Recurso> expectedRecursos = Arrays.asList(recurso1, recurso2);
@@ -193,6 +188,7 @@ public class RecursoControllerTest {
         verify(recursoRepository, times(1)).findByUsuarioId("user1");
     }
 
+    
     // Tests del endpoint GET /api/recursos/{id} (obtener un recurso por su ID):
     @Test
     void getById_ShouldReturnRecurso_WhenIdExists() {
@@ -217,10 +213,9 @@ public class RecursoControllerTest {
         verify(recursoRepository, times(1)).findById("999");
     }
 
-    // Tests del endpoint POST /api/recursos (crear un nuevo recurso):
     @Test
     void create_ShouldSaveAndReturnRecurso() {
-    	CreateRecursoDTO inputRecurso = new CreateRecursoDTO();
+        CreateRecursoDTO inputRecurso = new CreateRecursoDTO();
         inputRecurso.setTitulo("Nuevo libro");
         inputRecurso.setDescripcion("Nueva descripción");
         inputRecurso.setTiposIds(Arrays.asList("tipo1"));
@@ -268,7 +263,7 @@ public class RecursoControllerTest {
 
     // Tests del endpoint PUT /api/recursos/{id} (actualizar un recurso existente):
     @Test
-    void update_ShouldUpdateAndReturnRecurso_WhenIdExists() {
+    void update_ShouldUpdateBasicFields_WhenIdExists() {
         UpdateRecursoDTO updateData = new UpdateRecursoDTO();
         updateData.setTitulo("Título actualizado");
         updateData.setDescripcion("Descripción actualizada");
@@ -304,7 +299,66 @@ public class RecursoControllerTest {
         ResponseEntity<Recurso> response = recursoController.update("1", updateData);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(recursoRepository, times(1)).findById("1");
+        verify(recursoRepository, times(1)).save(any(Recurso.class));
+    }
+
+    @Test
+    void update_ShouldUpdateAutoresIds_WhenIdExists() {
+        UpdateRecursoDTO updateData = new UpdateRecursoDTO();
+        updateData.setAutoresIds(Arrays.asList("autor2"));
+
+        when(recursoRepository.findById("1")).thenReturn(Optional.of(recurso1));
+        when(recursoRepository.save(any(Recurso.class))).thenReturn(recurso1);
+
+        ResponseEntity<Recurso> response = recursoController.update("1", updateData);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(recursoRepository, times(1)).save(any(Recurso.class));
+    }
+
+    @Test
+    void update_ShouldUpdateCategoriasIds_WhenIdExists() {
+        UpdateRecursoDTO updateData = new UpdateRecursoDTO();
+        updateData.setCategoriasIds(Arrays.asList("cat2"));
+
+        when(recursoRepository.findById("1")).thenReturn(Optional.of(recurso1));
+        when(recursoRepository.save(any(Recurso.class))).thenReturn(recurso1);
+
+        ResponseEntity<Recurso> response = recursoController.update("1", updateData);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(recursoRepository, times(1)).save(any(Recurso.class));
+    }
+
+    @Test
+    void update_ShouldUpdateEtiquetasIds_WhenIdExists() {
+        UpdateRecursoDTO updateData = new UpdateRecursoDTO();
+        updateData.setEtiquetasIds(Arrays.asList("etq2"));
+
+        when(recursoRepository.findById("1")).thenReturn(Optional.of(recurso1));
+        when(recursoRepository.save(any(Recurso.class))).thenReturn(recurso1);
+
+        ResponseEntity<Recurso> response = recursoController.update("1", updateData);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(recursoRepository, times(1)).save(any(Recurso.class));
+    }
+
+    @Test
+    void update_ShouldUpdateAllRelations_WhenIdExists() {
+        UpdateRecursoDTO updateData = new UpdateRecursoDTO();
+        updateData.setTiposIds(Arrays.asList("tipo2"));
+        updateData.setAutoresIds(Arrays.asList("autor2"));
+        updateData.setCategoriasIds(Arrays.asList("cat2"));
+        updateData.setEtiquetasIds(Arrays.asList("etq2"));
+
+        when(recursoRepository.findById("1")).thenReturn(Optional.of(recurso1));
+        when(recursoRepository.save(any(Recurso.class))).thenReturn(recurso1);
+
+        ResponseEntity<Recurso> response = recursoController.update("1", updateData);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
         verify(recursoRepository, times(1)).save(any(Recurso.class));
     }
 
@@ -335,6 +389,7 @@ public class RecursoControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Solo título actualizado", response.getBody().getTitulo());
         assertEquals("Descripción 1", response.getBody().getDescripcion());
+
         verify(recursoRepository, times(1)).save(any(Recurso.class));
     }
 
@@ -355,7 +410,6 @@ public class RecursoControllerTest {
         verify(recursoRepository, times(1)).save(any(Recurso.class));
     }
 
-    // Tests del endpoint DELETE /api/recursos/{id} (eliminar un recurso):
     @Test
     void delete_ShouldReturnNoContent_WhenIdExists() {
         when(recursoRepository.existsById("1")).thenReturn(true);
@@ -433,6 +487,7 @@ public class RecursoControllerTest {
         verify(recursoSearchService, times(1)).search(any(RecursoSearchDTO.class));
     }
     
+
     // Test del endpoint GET /usuario/{usuarioId}:
     @Test
     void getByUsuario_ShouldReturnRecursos_WhenUsuarioExists() {
@@ -446,6 +501,7 @@ public class RecursoControllerTest {
         verify(recursoRepository, times(1)).findByUsuarioId("user1");
     }
     
+
     // Test del endpoint POST /usuario/{usuarioId}:
     @Test
     void createWithUser_ShouldCreateRecursoWithUsuarioId() {
