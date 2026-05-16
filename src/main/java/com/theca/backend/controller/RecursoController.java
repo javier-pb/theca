@@ -123,28 +123,28 @@ public class RecursoController {
 			usuario.setId(dto.getUsuarioId());
 			recurso.setUsuario(usuario);
 		}
-		if (dto.getTiposIds() != null) {
+		if (dto.getTiposIds() != null && !dto.getTiposIds().isEmpty()) {
 			List<Tipo> tipos = dto.getTiposIds().stream().map(id -> {
 				Tipo t = new Tipo(); t.setId(id); return t;
-			}).toList();
+			}).collect(Collectors.toList());
 			recurso.setTipos(tipos);
 		}
-		if (dto.getEtiquetasIds() != null) {
+		if (dto.getEtiquetasIds() != null && !dto.getEtiquetasIds().isEmpty()) {
 			List<Etiqueta> etiquetas = dto.getEtiquetasIds().stream().map(id -> {
 				Etiqueta e = new Etiqueta(); e.setId(id); return e;
-			}).toList();
+			}).collect(Collectors.toList());
 			recurso.setEtiquetas(etiquetas);
 		}
-		if (dto.getCategoriasIds() != null) {
+		if (dto.getCategoriasIds() != null && !dto.getCategoriasIds().isEmpty()) {
 			List<Categoria> categorias = dto.getCategoriasIds().stream().map(id -> {
 				Categoria c = new Categoria(); c.setId(id); return c;
-			}).toList();
+			}).collect(Collectors.toList());
 			recurso.setCategorias(categorias);
 		}
-		if (dto.getAutoresIds() != null) {
+		if (dto.getAutoresIds() != null && !dto.getAutoresIds().isEmpty()) {
 			List<Autor> autores = dto.getAutoresIds().stream().map(id -> {
 				Autor a = new Autor(); a.setId(id); return a;
-			}).toList();
+			}).collect(Collectors.toList());
 			recurso.setAutores(autores);
 		}
 
